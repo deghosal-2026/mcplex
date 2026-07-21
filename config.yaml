@@ -1,0 +1,53 @@
+# MCPlex — Connector Configuration
+# Defines MCP tools organized by connector (system).
+# Each connector has a name and a list of tools.
+# Add a new connector by adding a block below and
+# implementing its handler functions in mcplex/connectors/.
+
+connectors:
+  - name: incidentgpt
+    tools:
+      - name: incident_query_active
+        description: >
+          Query currently active incidents.
+          Returns ongoing incidents with severity, service, duration, and responder.
+        parameters:
+          service:
+            type: string
+            description: "Filter by service name (optional)"
+          severity:
+            type: string
+            description: "Filter by severity level: sev1, sev2, sev3 (optional)"
+        returns:
+          type: object
+          properties:
+            incidents:
+              type: array
+        permission: read
+
+      - name: incident_query_history
+        description: >
+          Query historical incidents with optional filters
+          for service and time range.
+        parameters:
+          service:
+            type: string
+            description: "Filter by service name (optional)"
+          days:
+            type: integer
+            description: "Number of days to look back (default: 30)"
+        returns:
+          type: object
+        permission: read
+
+      - name: incident_get_timeline
+        description: >
+          Get the full incident timeline with all events, decisions,
+          and correlated deploys. Use after querying an incident by ID.
+        parameters:
+          incident_id:
+            type: string
+            description: "Incident ID (e.g. INC-2026-142)"
+        returns:
+          type: object
+        permission: read
