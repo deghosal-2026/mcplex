@@ -1,9 +1,7 @@
-import json
 import pytest
 from starlette.testclient import TestClient
 
 from mcplex.config import Config, ToolDef, ConnectorDef
-from mcplex.registry import ToolRegistry
 from mcplex.server import create_app
 
 

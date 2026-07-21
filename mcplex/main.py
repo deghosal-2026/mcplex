@@ -6,15 +6,14 @@ from mcplex.server import create_app
 
 def cli():
     parser = argparse.ArgumentParser(prog="mcplex")
-    parser.add_argument("serve", help="Start the MCPlex server")
-    parser.add_argument("--config", default="config.yaml", help="Path to config file")
-    parser.add_argument("--host", default="0.0.0.0", help="Bind address")
-    parser.add_argument("--port", type=int, default=8000, help="Port")
-    args = parser.parse_args()
+    sub = parser.add_subparsers(dest="command", required=True)
 
-    if args.serve != "serve":
-        parser.print_help()
-        return
+    serve_parser = sub.add_parser("serve", help="Start the MCPlex server")
+    serve_parser.add_argument("--config", default="config.yaml", help="Path to config file")
+    serve_parser.add_argument("--host", default="0.0.0.0", help="Bind address")
+    serve_parser.add_argument("--port", type=int, default=8000, help="Port")
+
+    args = parser.parse_args()
 
     app = create_app(args.config)
     print(f"MCPlex starting on http://{args.host}:{args.port}")

@@ -11,10 +11,7 @@ from mcplex.transport import handle_mcp_message
 
 
 def create_app(config_or_path) -> Starlette:
-    if isinstance(config_or_path, str):
-        config = load_config(Path(config_or_path))
-    else:
-        config = config_or_path
+    config = load_config(Path(config_or_path)) if isinstance(config_or_path, str) else config_or_path
 
     registry = ToolRegistry(config)
     register_all(registry)

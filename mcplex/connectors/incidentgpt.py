@@ -1,8 +1,6 @@
 import json
 from datetime import datetime, timedelta, timezone
 
-# ── Mock data ──────────────────────────────────
-
 ACTIVE_INCIDENTS = [
     {
         "id": "INC-2026-142",
@@ -84,8 +82,6 @@ INCIDENT_TIMELINES = {
 }
 
 
-# ── Handlers ───────────────────────────────────
-
 async def handle_query_active(args: dict) -> str:
     service = args.get("service")
     severity = args.get("severity")
@@ -118,8 +114,6 @@ async def handle_get_timeline(args: dict) -> str:
         return json.dumps({"error": f"incident {incident_id} not found"})
     return json.dumps(timeline)
 
-
-# ── Registration ───────────────────────────────
 
 def register(registry):
     registry.register_handler("incident_query_active", handle_query_active)

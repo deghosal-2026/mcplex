@@ -1,4 +1,3 @@
-from pathlib import Path
 import yaml
 
 from mcplex.config import load_config, Config
