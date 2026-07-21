@@ -83,7 +83,7 @@ Two transport modes, auto-detected by the `Accept` header:
 ## Quick Start
 
 ```bash
-pip install mcplex
+pip install mcplex-backplane
 
 # Copy and edit environment (for docker-compose)
 cp .env.example .env

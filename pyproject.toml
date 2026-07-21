@@ -1,21 +1,38 @@
 [project]
-name = "mcplex"
-version = "0.1.0"
-description = "MCP backplane that unifies your AI agentic tools into one discoverable server"
-license = "MIT"
+name = "mcplex-backplane"
+version = "0.3.0"
+description = "Stateless HTTP proxy that exposes any REST API as an MCP tool"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Debashish Ghosal" },
+]
 requires-python = ">=3.11"
 dependencies = [
-    "mcp>=1.0.0",
     "pyyaml>=6.0",
     "pydantic>=2.0",
     "uvicorn>=0.30",
     "starlette>=0.40",
-    "sse-starlette>=2.0",
     "httpx>=0.27",
+]
+
+[project.urls]
+Homepage = "https://github.com/deghosal-2026/mcplex"
+Source = "https://github.com/deghosal-2026/mcplex"
+Documentation = "https://github.com/deghosal-2026/mcplex/tree/main/docs"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.5",
 ]
 
 [project.scripts]
 mcplex = "mcplex.main:cli"
+
+[tool.setuptools.packages.find]
+include = ["mcplex*"]
 
 [build-system]
 requires = ["setuptools>=75.0", "wheel"]
