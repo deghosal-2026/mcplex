@@ -1,0 +1,21 @@
+[project]
+name = "mcplex"
+version = "0.1.0"
+description = "MCP backplane that unifies your AI agentic tools into one discoverable server"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=1.0.0",
+    "pyyaml>=6.0",
+    "pydantic>=2.0",
+    "uvicorn>=0.30",
+    "starlette>=0.40",
+    "sse-starlette>=2.0",
+]
+
+[project.scripts]
+mcplex = "mcplex.main:cli"
+
+[build-system]
+requires = ["setuptools>=75.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
