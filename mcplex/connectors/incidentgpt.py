@@ -1,6 +1,17 @@
+"""
+Native incident-commander connector — built-in mock handlers.
+
+Provides three tools (``incident_query_active``, ``incident_query_history``,
+``incident_get_timeline``) backed by in-memory mock data.
+
+These handlers register only when no HTTP-proxy connector in the YAML
+config already covers the same tool name (see ``connectors/__init__.py``).
+"""
+
 import json
 from datetime import datetime, timedelta, timezone
 
+# ── Active incidents (currently open) ──────────────────────────────
 ACTIVE_INCIDENTS = [
     {
         "id": "INC-2026-142",
@@ -34,6 +45,7 @@ ACTIVE_INCIDENTS = [
     },
 ]
 
+# ── Historical incidents (resolved) ────────────────────────────────
 HISTORICAL_INCIDENTS = [
     {"id": "INC-2026-101", "title": "Database connection pool exhausted", "severity": "sev1", "service": "payment-service", "date": "2026-06-28", "root_cause": "Connection leak in order worker", "resolved": True},
     {"id": "INC-2026-102", "title": "Redis cluster failover", "severity": "sev2", "service": "auth-service", "date": "2026-06-30", "root_cause": "Memory pressure on primary node", "resolved": True},
@@ -47,6 +59,7 @@ HISTORICAL_INCIDENTS = [
     {"id": "INC-2026-135", "title": "CI pipeline secret rotation failure", "severity": "sev3", "service": "api-gateway", "date": "2026-07-19", "root_cause": "Secret not rotated in all regions", "resolved": True},
 ]
 
+# ── Incident timelines (event sequences per incident) ──────────────
 INCIDENT_TIMELINES = {
     "INC-2026-142": {
         "events": [
@@ -83,6 +96,7 @@ INCIDENT_TIMELINES = {
 
 
 async def handle_query_active(args: dict) -> str:
+    """Return active incidents, optionally filtered by service/severity."""
     service = args.get("service")
     severity = args.get("severity")
     results = ACTIVE_INCIDENTS
@@ -94,8 +108,13 @@ async def handle_query_active(args: dict) -> str:
 
 
 async def handle_query_history(args: dict) -> str:
+    """Return historical incidents, optionally filtered by service/days."""
     service = args.get("service")
-    days = args.get("days", 30)
+    # days may arrive as int (unit tests) or str (MCP client); normalise to int
+    try:
+        days = int(args.get("days", 30))
+    except (TypeError, ValueError):
+        days = 30
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     results = HISTORICAL_INCIDENTS
     if service:
@@ -108,6 +127,7 @@ async def handle_query_history(args: dict) -> str:
 
 
 async def handle_get_timeline(args: dict) -> str:
+    """Return the full timeline for a given incident_id."""
     incident_id = args.get("incident_id")
     timeline = INCIDENT_TIMELINES.get(incident_id)
     if not timeline:
@@ -115,7 +135,21 @@ async def handle_get_timeline(args: dict) -> str:
     return json.dumps(timeline)
 
 
-def register(registry):
-    registry.register_handler("incident_query_active", handle_query_active)
-    registry.register_handler("incident_query_history", handle_query_history)
-    registry.register_handler("incident_get_timeline", handle_get_timeline)
+def register(registry, skip_names: set | None = None):
+    """Register native incident-commander handlers.
+
+    Parameters
+    ----------
+    registry : ToolRegistry
+        The registry to populate.
+    skip_names : set of str, optional
+        Tool names to skip (e.g. because an HTTP proxy connector
+        already covers them).
+    """
+    skip_names = skip_names or set()
+    if "incident_query_active" not in skip_names:
+        registry.register_handler("incident_query_active", handle_query_active)
+    if "incident_query_history" not in skip_names:
+        registry.register_handler("incident_query_history", handle_query_history)
+    if "incident_get_timeline" not in skip_names:
+        registry.register_handler("incident_get_timeline", handle_get_timeline)

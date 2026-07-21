@@ -104,6 +104,17 @@
 | Read | `incident_query_active`, `guardian_check_policy`, `rag_search` | None |
 | Write (sensitive) | `deploy_rollback`, `deploy_trigger`, `guardian_override_policy` | MCP interrupt (human approves in chat) |
 
+## Transport
+
+MCPlex auto-detects Streamable HTTP (SSE) when clients send `Accept: text/event-stream`. Use the MCP Inspector for visual debugging:
+
+```bash
+npx @modelcontextprotocol/inspector --transport http \
+  --server-url http://localhost:8080/mcp
+```
+
+Opens a web UI at `http://localhost:6274` to explore tools, call them, and inspect responses.
+
 ## Success Metrics
 
 | Metric | Target |

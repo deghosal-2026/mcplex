@@ -1,0 +1,45 @@
+services:
+  guardian:
+    build: ../ai-code-guardian
+    ports:
+      - "8001:8080"
+    entrypoint: ["python", "-m", "guardian", "serve", "--port", "8080"]
+
+  ci-doctor:
+    build: ../ci-doctor
+    ports:
+      - "8002:8080"
+    environment:
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-dummy-mcplex-demo}
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET:-dummy-mcplex-demo}
+
+  sprint-intel:
+    build:
+      context: ../sprint-intelligence
+      dockerfile: api/Dockerfile
+    ports:
+      - "8003:5000"
+
+  test-bench:
+    build:
+      context: .
+      dockerfile: Dockerfile.bench
+    ports:
+      - "8004:8004"
+
+  mcplex:
+    build: .
+    ports:
+      - "8080:8000"
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    depends_on:
+      guardian:
+        condition: service_started
+      ci-doctor:
+        condition: service_started
+      sprint-intel:
+        condition: service_started
+      test-bench:
+        condition: service_started
+    command: ["serve", "--config", "/app/config.yaml", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,0 +1,64 @@
+# Contributing to MCPlex
+
+Thank you for considering contributing. MCPlex is a small project and
+every contribution helps.
+
+## Development Setup
+
+```bash
+# Clone the repo
+git clone https://github.com/deghosal-2026/mcplex
+cd mcplex
+
+# Install with dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+python -m pytest tests/ -v
+
+# Run linter
+ruff check mcplex/ tests/
+```
+
+## Project Structure
+
+```
+mcplex/
+  config.py          Pydantic models for YAML config
+  registry.py        Tool name → handler mapping
+  server.py          Starlette app factory
+  transport.py       MCP JSON-RPC + SSE handlers
+  connectors/
+    __init__.py      Registration of all connector types
+    http_proxy.py    Generic HTTP proxy handler
+    incidentgpt.py   Native incident-commander mock
+tests/
+  test_config.py
+  test_registry.py
+  test_transport.py
+  test_incidentgpt.py
+  test_bench.py      Mock backend server (4 APIs)
+  e2e/               E2E tests with MCP Inspector
+```
+
+## Making Changes
+
+1. Create a branch: `git checkout -b my-feature`
+2. Make your changes
+3. Add or update tests
+4. Run `ruff check mcplex/ tests/` — no new warnings
+5. Run `python -m pytest tests/ -v` — all tests pass
+6. Update documentation if needed
+7. Open a pull request
+
+## Code Style
+
+- Follow the existing code patterns (type hints, docstrings, async/await)
+- Use `json.dumps()` for constructing JSON strings, never f-string JSON
+- Add module-level docstrings to new files
+- Every function should have a docstring explaining what it does
+- Tests use pytest with `@pytest.mark.asyncio` for async tests
+
+## Questions?
+
+Open a GitHub Discussion or issue. We're happy to help.

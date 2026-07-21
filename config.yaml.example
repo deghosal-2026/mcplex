@@ -1,53 +1,125 @@
-# MCPlex — Connector Configuration
-# Defines MCP tools organized by connector (system).
-# Each connector has a name and a list of tools.
-# Add a new connector by adding a block below and
-# implementing its handler functions in mcplex/connectors/.
-
 connectors:
-  - name: incidentgpt
+  - name: guardian
+    type: http
+    base_url: http://localhost:8001
+    tools:
+      - name: guardian_check_policy
+        description: >
+          Check a pull request against AI code governance policy.
+          Returns pass/fail per rule with evidence.
+        http:
+          method: POST
+          path: /api/policy/check
+          param_mapping:
+            repo: repo
+            pr_number: pr_number
+        parameters:
+          repo:
+            type: string
+            description: "Repository name (e.g. my-org/payment-service)"
+          pr_number:
+            type: integer
+            description: "Pull request number"
+        permission: read
+
+      - name: guardian_get_coverage
+        description: >
+          Get governance coverage score for a repository.
+        http:
+          method: GET
+          path: /api/stats
+          param_mapping:
+            repo: repo
+        parameters:
+          repo:
+            type: string
+            description: "Repository name"
+        permission: read
+
+  - name: ci-agent
+    type: http
+    base_url: http://localhost:8002
+    tools:
+      - name: ci_diagnose_failure
+        description: >
+          Diagnose a CI failure from logs.
+        http:
+          method: POST
+          path: /api/diagnose
+        parameters:
+          repo: { type: string, description: "Repository name" }
+          run_id: { type: string, description: "CI run ID" }
+        permission: read
+
+      - name: ci_get_pipeline_history
+        description: >
+          Get CI pipeline history with failure pattern analysis.
+        http:
+          method: GET
+          path: /api/history
+        parameters:
+          repo: { type: string, description: "Repository name" }
+          days: { type: integer, description: "Number of days to look back" }
+        permission: read
+
+  - name: sprintsense
+    type: http
+    base_url: http://localhost:8003
+    tools:
+      - name: dora_get_metrics
+        description: >
+          Get DORA metrics for a team or service.
+        http:
+          method: GET
+          path: /api/dora/metrics
+        parameters:
+          scope: { type: string, description: "Team or service name" }
+          days: { type: integer, description: "Lookback period in days" }
+        permission: read
+
+      - name: dora_get_trend
+        description: >
+          Get DORA metrics trend over a configurable period.
+        http:
+          method: GET
+          path: /api/dora/trend
+        parameters:
+          scope: { type: string, description: "Team or service name" }
+          days: { type: integer, description: "Lookback period in days" }
+        permission: read
+
+  - name: incident-commander
+    type: http
+    base_url: http://localhost:8004
     tools:
       - name: incident_query_active
         description: >
           Query currently active incidents.
-          Returns ongoing incidents with severity, service, duration, and responder.
+        http:
+          method: GET
+          path: /api/incidents/active
         parameters:
-          service:
-            type: string
-            description: "Filter by service name (optional)"
-          severity:
-            type: string
-            description: "Filter by severity level: sev1, sev2, sev3 (optional)"
-        returns:
-          type: object
-          properties:
-            incidents:
-              type: array
+          service: { type: string, description: "Filter by service name (optional)" }
+          severity: { type: string, description: "Filter by sev1/sev2/sev3 (optional)" }
         permission: read
 
       - name: incident_query_history
         description: >
-          Query historical incidents with optional filters
-          for service and time range.
+          Query historical incidents with optional filters.
+        http:
+          method: GET
+          path: /api/incidents/history
         parameters:
-          service:
-            type: string
-            description: "Filter by service name (optional)"
-          days:
-            type: integer
-            description: "Number of days to look back (default: 30)"
-        returns:
-          type: object
+          service: { type: string, description: "Filter by service name" }
+          days: { type: integer, description: "Number of days to look back" }
         permission: read
 
       - name: incident_get_timeline
         description: >
-          Get the full incident timeline with all events, decisions,
-          and correlated deploys. Use after querying an incident by ID.
+          Get full incident timeline with events and correlated deploys.
+        http:
+          method: GET
+          path: /api/incidents/timeline
         parameters:
-          incident_id:
-            type: string
-            description: "Incident ID (e.g. INC-2026-142)"
-        returns:
-          type: object
+          incident_id: { type: string, description: "Incident ID (e.g. INC-2026-142)" }
         permission: read

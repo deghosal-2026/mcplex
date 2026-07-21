@@ -1,0 +1,80 @@
+[
+  {
+    "tool": "guardian_check_policy",
+    "args": {
+      "repo": "my-org/payment-service",
+      "pr_number": "42"
+    },
+    "status": "pass",
+    "response": "{\npassed:\ntrue\nrepo:\n\"my-org/payment-service\"\npr_number:\n42\nrules:\n[\n0:\n{\nname:\n\"hallucinated-apis\"\npassed:\ntrue\nevidence:\n\"No hallucinated API calls detected\"\n}\n1:\n{\nname:\n\"missing-error-handling\"\npassed:\ntrue\nevidence:\n\"All error paths handled\"\n}\n2:\n{\nname:\n\"hardcoded-secrets\"\npassed:\ntrue\nevidence:\n\"No secrets in code\"\n}\n]\n}"
+  },
+  {
+    "tool": "guardian_get_coverage",
+    "args": {
+      "repo": "my-org/payment-service"
+    },
+    "status": "pass",
+    "response": "{\nrepo:\n\"my-org/payment-service\"\ncoverage_pct:\n87\ntotal_prs:\n142\nreviewed_prs:\n124\ntrend:\n\"+5% this month\"\n}"
+  },
+  {
+    "tool": "ci_diagnose_failure",
+    "args": {
+      "repo": "my-org/payment-service",
+      "run_id": "123"
+    },
+    "status": "pass",
+    "response": "{\nroot_cause:\n\"Flaky test in my-org/payment-service run 123\"\nconfidence:\n0.89\nsuggested_fix:\n\"Increase timeout or retry logic\"\nsimilar_failures:\n[\n0:\n{\ndate:\n\"2026-07-15\"\ncause:\n\"Timeout\"\nfix:\n\"Increased timeout\"\n}\n]\n}"
+  },
+  {
+    "tool": "ci_get_pipeline_history",
+    "args": {
+      "repo": "my-org/payment-service",
+      "days": "30"
+    },
+    "status": "pass",
+    "response": "{\nrepo:\n\"my-org/payment-service\"\ntotal_runs:\n89\npass_rate:\n0.76\nfailure_patterns:\n[\n0:\n{\npattern:\n\"flakey test timeout\"\nfrequency:\n12\nlast_seen:\n\"2026-07-19\"\n}\n1:\n{\npattern:\n\"dependency download failure\"\nfrequency:\n4\nlast_seen:\n\"2026-07-17\"\n}\n]\n}"
+  },
+  {
+    "tool": "dora_get_metrics",
+    "args": {
+      "scope": "platform-team",
+      "days": "30"
+    },
+    "status": "pass",
+    "response": "{\nchange_failure_rate:\n\"0.08\"\ndeploy_frequency:\n\"daily\"\nlead_time:\n\"4.2h\"\nmttr:\n\"25min\"\nscope:\n\"platform-team\"\ntrend:\n\"improving\"\n}"
+  },
+  {
+    "tool": "dora_get_trend",
+    "args": {
+      "scope": "platform-team",
+      "days": "90"
+    },
+    "status": "pass",
+    "response": "{\nscope:\n\"platform-team\"\nweekly:\n[\n0:\n{\nchange_failure_rate:\n0.08\ndeploy_frequency:\n\"daily\"\nlead_time:\n\"4.2h\"\nmttr:\n\"25min\"\nweek:\n\"W29\"\n}\n1:\n{\nchange_failure_rate:\n0.11\ndeploy_frequency:\n\"daily\"\nlead_time:\n\"5.1h\"\nmttr:\n\"32min\"\nweek:\n\"W28\"\n}\n2:\n{\nchange_failure_rate:\n0.15\ndeploy_frequency:\n\"daily\"\nlead_time:\n\"6.0h\"\nmttr:\n\"40min\"\nweek:\n\"W27\"\n}\n]\n}"
+  },
+  {
+    "tool": "incident_query_active",
+    "args": {
+      "severity": "sev2"
+    },
+    "status": "pass",
+    "response": "{\nincidents:\n[\n0:\n{\nid:\n\"INC-2026-142\"\ntitle:\n\"Payment service error rate spike\"\nseverity:\n\"sev2\"\nservice:\n\"payment-service\"\nstarted_at:\n\"2026-07-20T14:23:00Z\"\nduration_minutes:\n45\nresponder:\n\"alice@team\"\nstatus:\n\"investigating\"\n}\n]\n}"
+  },
+  {
+    "tool": "incident_query_history",
+    "args": {
+      "service": "payment-service",
+      "days": "30"
+    },
+    "status": "pass",
+    "response": "{\nincidents:\n[\n0:\n{\nid:\n\"INC-2026-101\"\ntitle:\n\"Database connection pool exhausted\"\nseverity:\n\"sev1\"\nservice:\n\"payment-service\"\ndate:\n\"2026-06-28\"\nroot_cause:\n\"Connection leak in order worker\"\nresolved:\ntrue\n}\n]\n}"
+  },
+  {
+    "tool": "incident_get_timeline",
+    "args": {
+      "incident_id": "INC-2026-142"
+    },
+    "status": "pass",
+    "response": "{\nevents:\n[\n0:\n{\ntimestamp:\n\"2026-07-20T14:23:00Z\"\ntype:\n\"detected\"\ndescription:\n\"Error rate exceeded 5% threshold\"\nactor:\n\"prometheus\"\n}\n1:\n{\ntimestamp:\n\"2026-07-20T14:45:00Z\"\ntype:\n\"action\"\ndescription:\n\"Rolled back payment-service to v2.14.2\"\nactor:\n\"alice@team\"\n}\n]\ncorrelated_deploys:\n[\n0:\n{\nid:\n\"DEP-2026-891\"\nservice:\n\"payment-service\"\ntime:\n\"2026-07-20T14:00:00Z\"\n}\n]\n}"
+  }
+]

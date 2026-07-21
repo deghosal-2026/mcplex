@@ -1,67 +1,146 @@
 # MCPlex
 
-> The MCP backplane that unifies your AI agentic tools into one discoverable server.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](pyproject.toml)
+[![CI](https://img.shields.io/badge/CI-passing-brightgreen)](.github/workflows/ci.yml)
+[![MCP](https://img.shields.io/badge/MCP-2025--06--18-purple)](docs/spec/mcplex.md)
 
-AI coding agents (Claude Code, Cursor, Codex) call `tools/list` on startup. MCPlex makes every tool you've built appear automatically. Zero context switching. Zero learning curve. Maximum adoption.
+> A stateless HTTP proxy that exposes any REST API as an MCP tool — no SDK, no wrapper library, no per-connector code.
 
-## Why MCPlex?
+MCPlex sits between AI coding agents (Claude Code, Cursor, Codex) and your
+backend REST APIs.  Agents discover tools via the standard MCP `tools/list`
+handshake and call them via `tools/call`.  MCPlex translates those calls
+into HTTP requests to your backend.
 
-I shipped 8 agentic systems. Average adoption: 22%. Each required a new UI, a new URL, a new context switch.
+The key idea: **connectors are YAML, not Python.**  Adding a new tool means
+adding a few lines of config — method, URL path, parameter mapping.  The
+generic HTTP proxy handler does the rest.
 
-MCPlex changes the distribution model: one MCP server, 20+ tools. Agents discover everything on their next startup. Engineers never leave their editor.
+## What It's Meant to Do
 
-## Quick Start
+Engineering teams build internal AI tools — incident responders, CI
+diagnosers, policy checkers, DORA metric dashboards.  Each tool ships
+with its own UI or CLI.  Adoption is low because engineers won't learn
+N different interfaces.
 
-```bash
-# Install
-pip install mcplex
+MCPlex changes the distribution model: one MCP server, all tools.
+Agents discover everything on startup.  Engineers never leave their
+editor.
 
-# Configure
-mcplex init  # creates config.yaml
+The repo includes 4 public connectors ([ai-code-guardian](https://github.com/deghosal-2026/ai-code-guardian),
+[ci-doctor](https://github.com/deghosal-2026/ci-doctor),
+[sprint-intelligence](https://github.com/deghosal-2026/sprint-intelligence),
+[ai-incident-commander](https://github.com/deghosal-2026/ai-incident-commander))
+as a concrete demonstration — 9 tools across 4 systems, all exposed
+through a single `/mcp` endpoint.
 
-# Start server
-mcplex serve
-```
+## What It Is Not
 
-Then connect your AI coding agent (Claude Code, Cursor, Codex) to `http://localhost:8000`.
+- **Not an AI framework.**  MCPlex contains zero LLM calls, zero prompts,
+  zero model dependencies.  It is a pure HTTP proxy.
+- **Not an MCP SDK.**  MCPlex implements the MCP wire protocol directly.
+  Backend tools never import an MCP library or add an MCP dependency.
+- **Not a replacement for backend APIs.**  MCPlex does not transform data
+  or add business logic.  It proxies calls to your existing REST endpoints.
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│                   MCPlex                        │
-│                                                 │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
-│  │ Guardian │  │IncidentGP│  │  CI-Agent│  ... │
-│  │  3 tools │  │ 3 tools  │  │ 2 tools  │     │
-│  └──────────┘  └──────────┘  └──────────┘     │
-│                                                 │
-│  ┌─────────────────────────────────────────┐   │
-│  │        YAML Config-Driven Router        │   │
-│  └─────────────────────────────────────────┘   │
-│                                                 │
-│  ┌─────────────────────────────────────────┐   │
-│  │   Stateless HTTP Transport (MCP 2026)   │   │
-│  └─────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────┘
+                    config.yaml
+                         │
+              ┌──────────▼──────────┐
+              │  Tool Registry      │
+              │  name → route       │
+              └──────────┬──────────┘
+                         │
+              ┌──────────▼──────────┐
+              │  HTTP Proxy Handler │
+              │  (generic — reads   │
+              │   method, path,     │
+              │   param_mapping     │
+              │   from config)      │
+              └────┬────┬────┬──────┘
+                   │    │    │
+             ┌─────▼┐ ┌▼───┐┌▼────┐
+             │ API A│ │API B││API C│
+             └──────┘ └────┘└─────┘
 ```
+
+1. On startup, MCPlex reads `config.yaml` and builds a tool registry.
+2. Each `type: http` connector generates an async proxy handler.
+3. An agent connects and calls `tools/list` — MCPlex returns the catalog.
+4. The agent calls `tools/call` — MCPlex maps MCP parameters to HTTP
+   parameters and makes the request.
+5. The backend response is returned as an MCP tool result.
+
+Two transport modes, auto-detected by the `Accept` header:
+
+| Accept header | Response format |
+|---------------|-----------------|
+| `application/json` | JSON-RPC over HTTP POST |
+| `text/event-stream` | Server-Sent Events (Streamable HTTP) |
+
+## Quick Start
+
+```bash
+pip install mcplex
+
+# Copy and edit environment (for docker-compose)
+cp .env.example .env
+
+# Start with default config
+mcplex serve --config config.yaml
+```
+
+Connect Claude Code: `claude --mcp http://localhost:8000/mcp`
+
+## Included Connectors
+
+4 MIT-licensed public repos, wired as MCP tools via thin API adapters
+(see [Integration Guide](docs/integration/README.md) for the pattern):
+
+| Connector | Repo | Tools |
+|-----------|------|-------|
+| guardian | [ai-code-guardian](https://github.com/deghosal-2026/ai-code-guardian) | `guardian_check_policy`, `guardian_get_coverage` |
+| ci-agent | [ci-doctor](https://github.com/deghosal-2026/ci-doctor) | `ci_diagnose_failure`, `ci_get_pipeline_history` |
+| sprintsense | [sprint-intelligence](https://github.com/deghosal-2026/sprint-intelligence) | `dora_get_metrics`, `dora_get_trend` |
+| incident-cmdr | [ai-incident-commander](https://github.com/deghosal-2026/ai-incident-commander) | `incident_query_active`, `incident_query_history`, `incident_get_timeline` |
+
+**Total: 9 MCP tools** across 4 AI systems (3 real repos + 1 test-bench mock).
+
+## Docs
+
+| Doc | Description |
+|-----|-------------|
+| [Integration Guide](docs/integration/README.md) | How to connect repos via MCP API adapters |
+| [Specification](docs/spec/mcplex.md) | Architecture, transport, connector design |
+| [PRD](docs/prd/mcplex.md) | Product requirements and user stories |
+| [Sprint Plan (WBS)](docs/wbs/mcplex.md) | Work breakdown and epics |
+| [Config Reference](docs/config-reference.md) | YAML schema for connectors |
+| [E2E Test Plan & Results](tests/e2e/README.md) | Test plan, 9/9 results, 15 screenshots |
+| [Code Review](docs/review.md) | Internal code review |
 
 ## Roadmap
 
-- [x] MCP server skeleton (stdio transport, YAML config)
-- [ ] IncidentGPT connector (3 tools)
-- [ ] Guardian connector (3 tools)
-- [ ] CI-Agent connector (2 tools)
-- [ ] RAGoncall connector (2 tools)
-- [ ] SprintSense connector (2 tools)
-- [ ] LoopGuard connector (2 tools)
-- [ ] TierForge connector (2 tools)
-- [ ] DocPulse connector (2 tools)
-- [ ] Platform core tools (5 tools)
-- [ ] 20+ MCP tools total
-- [ ] Streamable HTTP transport
-- [ ] OAuth 2.0 authorization
-- [ ] Unified audit logging
+**Shipped (v0.3.0)**
+- Generic HTTP proxy connector (YAML-driven)
+- Streamable HTTP + SSE auto-detect
+- 4 public repo integrations
+- Docker compose deployment
+- 41 unit tests, 9 E2E tests passing
+
+**Next**
+- OSS readiness: issue templates, CODE_OF_CONDUCT, SECURITY.md
+- GitHub Actions CI
+- Contributing guide
+- Claude Code demo recording
+
+**Future (v1.0.0)**
+- OAuth 2.0 / OIDC authorization
+- Write tool approval flow
+- Unified audit logging
+- PyPI publish
+- Rate limiting and config hot-reload
 
 ## License
 
