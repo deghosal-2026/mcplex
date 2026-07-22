@@ -36,20 +36,21 @@ The repo includes a 4-connector demo config as an illustration of the pattern �
 3 connectors proxy to real sibling repos; the 4th runs on mock data via a
 native Python connector for backends without an HTTP server.
 
-## Current Limitations (v0.3.0)
+## Current Limitations (v0.4.0)
 
-| What works | What's planned (v1.0.0) |
+| What works | What's planned |
 |---|---|
 | `GET` with query params + `POST` with JSON body | `PUT` / `DELETE` support |
 | Flat `param_mapping` (MCP arg → HTTP param) | Path-param templating (`/api/{id}`) |
-| JSON responses | Non-JSON response handling |
+| JSON + non-JSON response handling (HTML/text wrapped) | |
 | Static header injection with `${ENV_VAR}` interpolation | OAuth 2.0 / OIDC |
-| JSON-RPC + one-shot SSE framing | Keepalive, progress streaming, session continuity |
-| 50 unit tests | Self-contained integration tests (no Docker) |
-| | Identity propagation (user/agent identity through proxy) |
-| | Write-tool approval flow |
-| | Rate limiting per-tool/per-agent |
-| | Structured audit logging |
+| SSE heartbeat keepalive | Progress streaming, session continuity |
+| Identity propagation (X-MCP-Client-Name / Version headers) | |
+| Schema/argument validation (type, required, enum, min/max) | |
+| Rate limiting per-tool/per-agent | |
+| Structured audit logging (session_id, user_id, backend_url, etc.) | |
+| Connection pooling (shared httpx.AsyncClient) | |
+| 75 unit + integration tests | Write-tool approval flow |
 | | Config hot-reload |
 
 ## What It Is Not
@@ -181,15 +182,25 @@ The demo `config.yaml` includes 4 connectors — 3 proxy to real sibling repos,
 - OSS readiness: CI, issue templates, CODE_OF_CONDUCT, SECURITY.md, CONTRIBUTING.md
 - 50 unit tests, Docker Compose deployment
 
+**Shipped (v0.4.0)**
+- Identity propagation (X-MCP-Client-Name / Version headers)
+- Structured audit logging (session_id, user_id, backend_url, http_status)
+- Per-tool / per-agent rate limiting
+- Schema/argument validation (type, required, enum, min/max)
+- Non-JSON response handling (HTML/text wrapped)
+- SSE heartbeat keepalive
+- Connection pooling (shared httpx.AsyncClient)
+- 75 tests (unit + integration), self-contained mock-based integration tests
+- PyPI publish as `mcplex-backplane`
+- See [CHANGELOG.md](CHANGELOG.md) for full details
+
 **Future (v1.0.0)**
-- Identity propagation — carry user/agent identity through proxy
 - Write‑tool approval flow
-- Structured audit logging — timestamp, session, tool, params, latency, status
-- Per‑tool / per‑agent rate limiting
 - Config hot‑reload
-- Path‑param templating, non‑JSON response handling, PUT/DELETE support
-- SSE keepalive and progress streaming
-- PyPI publish
+- Path‑param templating (`/api/{id}`)
+- PUT/DELETE support
+- SSE progress streaming and session continuity
+- OAuth 2.0 / OIDC
 
 ## License
 

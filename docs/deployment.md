@@ -79,7 +79,7 @@ Invalid config on reload keeps the current config running — no downtime.
 - **No auth layer**: MCPlex itself has no authentication. Protect it behind a reverse proxy (nginx/Caddy) with your org's auth (OAuth2 proxy, mTLS, VPN).
 - **No write gating**: All tools execute immediately. Do not expose destructive backends through MCPlex without backend-level auth.
 - **Secrets in config**: Use `${ENV_VAR}` interpolation for headers containing tokens. Never commit literal secrets to `config.yaml`.
-- **Identity propagation**: Client identity from `initialize.params.clientInfo` is logged for auditing but not forwarded to backends yet (v1.0.0).
+- **Identity propagation**: Client identity from `initialize.params.clientInfo` is forwarded to backends as `X-MCP-Client-Name` and `X-MCP-Client-Version` headers.
 
 ## Health Check
 

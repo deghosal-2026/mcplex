@@ -64,4 +64,4 @@ Tool 'guardian_check_policy' (connector: guardian) has no handler registered
 
 **Cause**: MCPlex SSE is one-shot per response. If a proxy or load balancer drops idle connections with a timeout less than the backend response time, the SSE response will be truncated.
 
-**Workaround**: Increase proxy read timeout (e.g., `proxy_read_timeout 30s` in nginx). Keepalive/progress streaming is planned for v1.0.0.
+**Workaround**: Increase proxy read timeout (e.g., `proxy_read_timeout 30s` in nginx). SSE heartbeat keepalive is enabled; progress streaming is planned for v1.0.0.
