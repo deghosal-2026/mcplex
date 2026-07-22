@@ -1,5 +1,5 @@
 [project]
-name = "mcplex"
+name = "mcplex-backplane"
 version = "0.4.0"
 description = "YAML-configured MCP proxy that maps simple JSON REST endpoints into MCP tools"
 readme = "README.md"

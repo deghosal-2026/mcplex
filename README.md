@@ -129,7 +129,7 @@ To try it without cloning sibling repos, run the test bench: `python tests/test_
 ## Quick Start
 
 ```bash
-pip install mcplex
+pip install mcplex-backplane
 
 # Try with the test-bench mock (no sibling repos needed)
 python tests/test_bench.py &

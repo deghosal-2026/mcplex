@@ -58,7 +58,7 @@ Tool 'guardian_check_policy' (connector: guardian) has no handler registered
 
 **Cause**: The package was installed before `__version__` was added to `mcplex/__init__.py`.
 
-**Fix**: Reinstall: `pip uninstall mcplex && pip install mcplex`.
+**Fix**: Reinstall: `pip uninstall mcplex-backplane && pip install mcplex-backplane`.
 
 ## SSE connection drops mid-request
 

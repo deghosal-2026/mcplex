@@ -3,7 +3,7 @@
 ## Quick Start (Development)
 
 ```bash
-pip install mcplex
+pip install mcplex-backplane
 
 # Run with test-bench mock (no sibling repos needed)
 python tests/test_bench.py &
