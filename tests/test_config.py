@@ -11,18 +11,19 @@ from mcplex.config import load_config, Config
 
 
 def test_load_config(tmp_path):
-    """Load a config with a single native connector."""
+    """Load a config with a single HTTP connector."""
     config_data = {
         "connectors": [
             {
                 "name": "incidentgpt",
+                "type": "http",
+                "base_url": "http://localhost:8004",
                 "tools": [
                     {
                         "name": "incident_query_active",
                         "description": "Query active incidents",
                         "parameters": {"service": {"type": "string"}},
                         "returns": {"type": "object"},
-                        "permission": "read",
                     }
                 ],
             }
@@ -85,7 +86,6 @@ def test_load_config_http_connector(tmp_path):
                             "path": "/mcp/policy/check",
                             "param_mapping": {"repo": "repo"},
                         },
-                        "permission": "read",
                     }
                 ],
             }
@@ -98,6 +98,19 @@ def test_load_config_http_connector(tmp_path):
     assert config.connectors[0].base_url == "http://guardian:8080"
     assert config.connectors[0].tools[0].http is not None
     assert config.connectors[0].tools[0].http.path == "/mcp/policy/check"
+
+
+def test_load_config_missing_base_url(tmp_path):
+    """An HTTP connector with no base_url raises a validation error."""
+    config_data = {
+        "connectors": [
+            {"name": "bad", "type": "http", "base_url": "", "tools": []}
+        ]
+    }
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(yaml.dump(config_data))
+    with pytest.raises(Exception):
+        load_config(config_file)
 
 
 def test_load_config_invalid_connector_type(tmp_path):

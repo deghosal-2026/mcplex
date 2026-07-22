@@ -1,7 +1,7 @@
 [project]
-name = "mcplex-backplane"
-version = "0.3.0"
-description = "Stateless HTTP proxy that exposes any REST API as an MCP tool"
+name = "mcplex"
+version = "0.4.0"
+description = "YAML-configured MCP proxy that maps simple JSON REST endpoints into MCP tools"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [
@@ -33,6 +33,11 @@ mcplex = "mcplex.main:cli"
 
 [tool.setuptools.packages.find]
 include = ["mcplex*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+testpaths = ["tests"]
+norecursedirs = ["e2e", "test-bench"]
 
 [build-system]
 requires = ["setuptools>=75.0", "wheel"]

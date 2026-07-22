@@ -56,17 +56,35 @@ class ToolRegistry:
             for t in self._tools.values()
         ]
 
-    async def call_tool(self, name: str, arguments: dict) -> str:
-        """Execute a tool by name and return a JSON string result.
+    def has_handler(self, tool_name: str) -> bool:
+        """Return True if a handler is registered for *tool_name*."""
+        return tool_name in self._handlers
 
-        Returns a JSON error object (not a bare string) so the transport
-        layer can decide how to surface it.
+    def get_tool_schema(self, tool_name: str) -> dict | None:
+        """Return the declared parameter JSON Schema for *tool_name*, or None."""
+        entry = self._tools.get(tool_name)
+        if entry:
+            return entry["def"].parameters
+        return None
+
+    async def call_tool(self, name: str, arguments: dict) -> tuple[str, bool]:
+        """Execute a tool by name and return ``(result_json, is_error)``.
+
+        *is_error* is True when the handler failed, the tool was not found,
+        or the handler returned an error payload — so the transport can set
+        the MCP ``isError`` flag on the content block.
         """
         handler = self._handlers.get(name)
         if not handler:
-            return json.dumps({"error": f"tool {name!r} not found"})
+            return json.dumps({"error": f"tool {name!r} not found"}), True
         try:
-            return await handler(arguments)
+            result = await handler(arguments)
         except Exception as e:
             logger.exception("Tool %r raised an exception", name)
-            return json.dumps({"error": str(e)})
+            return json.dumps({"error": str(e)}), True
+        try:
+            parsed = json.loads(result)
+            is_error = isinstance(parsed, dict) and "error" in parsed
+        except (json.JSONDecodeError, TypeError):
+            is_error = False
+        return result, is_error

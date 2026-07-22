@@ -37,7 +37,7 @@
 
 ## Transport Layer
 
-MCPlex ships HTTP-only, per the MCP Streamable HTTP spec (`2025-03-26`+). No stdio, no deprecated HTTP+SSE (`2024-11-05`) transport.
+MCPlex ships HTTP-only, per the MCP Streamable HTTP spec (`2025-06-18`+). No stdio, no deprecated HTTP+SSE (`2024-11-05`) transport.
 
 Two response modes, auto-detected by the client's `Accept` header on the single `/mcp` endpoint:
 
@@ -57,7 +57,7 @@ data: {"jsonrpc": "2.0", "id": 1, "result": {...}}
 
 Both modes use the same `/mcp` endpoint and the same JSON-RPC message format — only the response framing differs. This is the current MCP transport spec; the old HTTP+SSE transport (`/sse` + `/message` endpoints, protocol `2024-11-05`) is deprecated and not implemented.
 
-Used by the [MCP Inspector](https://github.com/modelcontextprotocol/inspector) for visual debugging. E2E tested — see `tests/test_inspector_e2e.py`.
+Used by the [MCP Inspector](https://github.com/modelcontextprotocol/inspector) for visual debugging. E2E tested — see `tests/e2e/test_inspector_e2e.py`.
 
 **Phase 2 (future):** OAuth, session management, long-running tool call streaming.
 
@@ -105,7 +105,7 @@ connectors:
 |-------|----------|-------------|
 | `type` | yes | Must be `"http"` |
 | `base_url` | yes | Backend API base URL (e.g. `http://localhost:8001`) |
-| `tools[].http.method` | yes | HTTP method: GET, POST, PUT, DELETE |
+| `tools[].http.method` | no | HTTP method: GET (default) or POST |
 | `tools[].http.path` | yes | URL path relative to base_url |
 | `tools[].http.param_mapping` | no | Maps MCP param names → HTTP query/body param names |
 | `tools[].http.headers` | no | Static headers to include (e.g. Authorization) |
@@ -118,7 +118,7 @@ Currently only the IncidentGPT mock connector uses this — it provides demo dat
 
 ### Error Handling
 
-- HTTP proxy timeout: 5s default, configurable per connector
+- HTTP proxy timeout: 5s (global constant; per-connector override planned)
 - Non-200 response: return `{ "error": "backend returned {status}: {body}" }`
 - Connection refused: return `{ "error": "{connector_name} is unavailable. Other tools are working." }`
 - Per-connector isolation: one connector timeout doesn't block others

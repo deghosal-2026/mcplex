@@ -2,33 +2,54 @@
 
 ## File Location
 
-Default: `config.yaml` in the working directory. Override with `--config`.
+Default: `config.yaml` in the working directory.  Override with `--config`.
 
 ## Root Structure
 
 ```yaml
 connectors:
   - name: <string>
+    type: http                  # required
+    base_url: <string>          # required — backend API root URL
     tools:
-      - name: <string>
-        description: <string>
-        parameters: <object>
-        returns: <object>
-        permission: <"read" | "write">
+      - name: <string>          # MCP tool name
+        description: <string>   # agent-optimized description
+        parameters: <object>    # JSON Schema for tool parameters
+        returns: <object>       # JSON Schema for return value (informational)
+        http:
+          method: <string>      # GET (default) or POST
+          path: <string>        # URL path relative to base_url
+          param_mapping: <dict> # MCP arg name → HTTP param name (optional)
+          headers: <dict>       # static headers with ${ENV_VAR} interpolation
 ```
 
 ## Fields
 
-| Field | Required | Type | Description |
-|-------|----------|------|-------------|
-| `connectors` | yes | array | List of connector definitions |
-| `connectors[].name` | yes | string | Connector/module name. Must match the handler module in `mcplex/connectors/` |
-| `connectors[].tools` | yes | array | List of MCP tool definitions |
-| `connectors[].tools[].name` | yes | string | MCP tool name. Agents use this to call the tool. Convention: `{system}_{action}` |
-| `connectors[].tools[].description` | yes | string | Agent-optimized description. Tells the agent when to use this tool and what it returns |
-| `connectors[].tools[].parameters` | yes | object | JSON Schema for tool parameters. Each key is a parameter name |
-| `connectors[].tools[].returns` | yes | object | JSON Schema for the return value (informational) |
-| `connectors[].tools[].permission` | no | string | `"read"` (default) or `"write"`. Write tools require human approval |
+| Field | Required | Type | Default | Description |
+|-------|----------|------|---------|-------------|
+| `connectors` | yes | array | | List of connector definitions |
+| `connectors[].name` | yes | string | | Connector/module name |
+| `connectors[].type` | yes | string | `"http"` | Connector type — currently only `"http"` |
+| `connectors[].base_url` | yes | string | | Backend API root URL (e.g. `http://localhost:8001`) |
+| `connectors[].tools` | yes | array | | List of MCP tool definitions |
+| `tools[].name` | yes | string | | MCP tool name. Convention: `{system}_{action}` |
+| `tools[].description` | yes | string | | Agent-optimized description. Tells the agent when to use this tool and what it returns |
+| `tools[].parameters` | yes | object | | JSON Schema for tool parameters |
+| `tools[].returns` | yes | object | | JSON Schema for the return value (informational) |
+| `tools[].http.method` | no | string | `"GET"` | HTTP method: `GET` or `POST` |
+| `tools[].http.path` | yes | string | | URL path relative to `base_url` (e.g. `/api/diagnose`) |
+| `tools[].http.param_mapping` | no | object | `{}` | Maps MCP argument names → backend HTTP parameter names |
+| `tools[].http.headers` | no | object | `{}` | Static headers injected on every request. Supports `${ENV_VAR}` interpolation |
+
+## Environment Variable Interpolation
+
+String values (especially `headers`) support `${VAR}` and `${VAR:-default}` patterns:
+
+```yaml
+http:
+  headers:
+    Authorization: "Bearer ${MCPLEX_AUTH_TOKEN}"
+```
 
 ## Tool Naming Convention
 

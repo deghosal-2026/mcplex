@@ -4,9 +4,7 @@ Run: python tests/test_bench.py
 This starts 4 servers on ports 8001-8004 for mcplex to connect to.
 """
 
-import json
 import uvicorn
-from datetime import datetime, timezone
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
@@ -59,7 +57,7 @@ guardian = make_bench("guardian", 8001, [
 # ── CI-Doctor (:8002) ─────────────────────────────────────────
 
 async def ci_diagnose(request):
-    body = await request.json()
+    await request.json()
     return JSONResponse({
         "root_cause": "Flaky test: TestAuthRefresh timing out intermittently",
         "confidence": 0.89,

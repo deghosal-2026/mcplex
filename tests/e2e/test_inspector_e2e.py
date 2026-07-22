@@ -22,7 +22,6 @@ import time
 import sys
 import os
 import signal
-import re
 import urllib.request
 from pathlib import Path
 from playwright.async_api import async_playwright
@@ -126,30 +125,10 @@ async def fill_arg(page, key, value):
     return False
 
 
-def extract_json_from_text(text):
-    """Extract a JSON object from rendered page text."""
-    # The Inspector renders JSON as a tree with colons, not raw JSON.
-    # Look for "Tool Result:" section and parse the tree.
-    # Fallback: try to find raw JSON with regex.
-    match = re.search(r'\{[^{}]*"passed"[^{}]*\}', text, re.DOTALL)
-    if match:
-        try:
-            return json.loads(match.group(0))
-        except json.JSONDecodeError:
-            pass
-    # Try finding any {...} block
-    for m in re.finditer(r'\{.*?\}', text, re.DOTALL):
-        try:
-            return json.loads(m.group(0))
-        except json.JSONDecodeError:
-            continue
-    return None
-
-
 async def run():
     print("=" * 70)
     print("MCPlex E2E Test — MCP Inspector UI")
-    print("Screenshots → docs/user-guide/screenshots/")
+    print("Screenshots → tests/e2e/screenshots/")
     print("=" * 70)
 
     # 1. Launch Inspector
@@ -235,14 +214,14 @@ async def run():
                     # Click the tool name in the list
                     tool_elem = page.locator(f"text={tool_name}").first
                     if not await tool_elem.is_visible(timeout=5000):
-                        print(f"   ✗ Tool not found in UI")
+                        print("   ✗ Tool not found in UI")
                         result["response"] = "Tool not found"
                         results.append(result)
                         continue
 
                     await tool_elem.click()
                     await page.wait_for_timeout(800)
-                    print(f"   ✓ Selected tool")
+                    print("   ✓ Selected tool")
 
                     # Fill args
                     for key, value in args.items():
@@ -258,10 +237,10 @@ async def run():
                         run_btn = page.locator("button:has-text('Call Tool')").first
                     if await run_btn.is_visible(timeout=1000):
                         await run_btn.click()
-                        print(f"   ✓ Ran tool")
+                        print("   ✓ Ran tool")
                         await page.wait_for_timeout(3000)
                     else:
-                        print(f"   ✗ No Run button")
+                        print("   ✗ No Run button")
 
                     # Capture response from "Tool Result:" section
                     body = await page.locator("body").inner_text()
@@ -269,13 +248,13 @@ async def run():
                     # Check for success/error indicator
                     if "Tool Result: Success" in body:
                         result_section = body.split("Tool Result: Success")[1].split("History")[0]
-                        print(f"   ✓ Got result")
+                        print("   ✓ Got result")
                     elif "Tool Result:" in body:
                         result_section = body.split("Tool Result:")[1].split("History")[0]
-                        print(f"   ~ Got result (status unclear)")
+                        print("   ~ Got result (status unclear)")
                     else:
                         result_section = body[-800:]
-                        print(f"   ~ No clear result section")
+                        print("   ~ No clear result section")
 
                     await page.screenshot(
                         path=screenshot_path(f"06-{(i+1):02d}-{tool_name}.png"))

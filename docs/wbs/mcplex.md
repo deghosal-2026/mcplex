@@ -50,11 +50,11 @@
 
 | WBS | Issue | Title | Est. | Status |
 |-----|-------|-------|------|--------|
-| 4.1 | #16 | Issue templates — bug report + feature request in `.github/ISSUE_TEMPLATE/` | 0.5hr | |
-| 4.2 | #17 | Pull request template — `.github/PULL_REQUEST_TEMPLATE.md` | 0.5hr | |
-| 4.3 | #18 | CODE_OF_CONDUCT.md (Contributor Covenant) | 0.5hr | |
-| 4.4 | #19 | SECURITY.md — how to report vulnerabilities | 0.5hr | |
-| 4.5 | #20 | GitHub Actions CI — lint (ruff), typecheck (pyright/mypy), unit tests on PR | 1hr | |
+| 4.1 | #16 | Issue templates — bug report + feature request in `.github/ISSUE_TEMPLATE/` | 0.5hr | [x] |
+| 4.2 | #17 | Pull request template — `.github/PULL_REQUEST_TEMPLATE.md` | 0.5hr | [x] |
+| 4.3 | #18 | CODE_OF_CONDUCT.md (Contributor Covenant) | 0.5hr | [x] |
+| 4.4 | #19 | SECURITY.md — how to report vulnerabilities | 0.5hr | [x] |
+| 4.5 | #20 | GitHub Actions CI — lint (ruff), typecheck (pyright/mypy), unit tests on PR | 1hr | [x] |
 
 ### Epic 5: Documentation
 
@@ -62,7 +62,7 @@
 |-----|-------|-------|------|--------|
 | 5.1 | #12 | README: what, why, quick start, architecture diagram, Claude Code setup | 1hr | [x] |
 | 5.2 | #21 | Config reference: all YAML fields with examples | 1hr | [x] |
-| 5.3 | #13 | Contributing guide: setup, test, submit PR | 0.5hr | |
+| 5.3 | #13 | Contributing guide: setup, test, submit PR | 0.5hr | [x] |
 
 **Sprint 1 total:** ~12.5 hours
 
@@ -82,7 +82,7 @@ The core architectural shift. Instead of one Python file per connector, a generi
 | 6.2 | — | Config schema for `type: http` connectors — base_url, method, path, param mapping, headers | 1hr | [x] |
 | 6.3 | — | ToolRegistry: dynamic handler creation from `type: http` config entries | 1hr | [x] |
 | 6.4 | — | Error handling — timeout (5s), non-200, connection refused → structured MCP error | 0.5hr | [x] |
-| 6.5 | — | Auth support — static bearer token, header injection (for internal API keys) | 0.5hr | |
+| 6.5 | — | Auth support — static bearer token, header injection with `${ENV_VAR}` interpolation | 0.5hr | [x] |
 | 6.6 | — | Unit tests: HTTP proxy handler mocking responses, error conditions | 1hr | [x] |
 
 ### Epic 7: Test Bench — Mock All 4 Backend APIs
@@ -224,9 +224,9 @@ After wiring 3 real repos (Sprint 3), the topology evolves to:
 | 14 | Graceful degradation: per-connector timeout + error isolation + JSON validation | 2hr | [x] |
 | 15 | OAuth 2.0 + OIDC authorization (read-by-default, write-on-approval) | 4hr | |
 | 16 | Write tool MCP interrupt approval flow | 3hr | |
-| 17 | Unified audit logging: all tool calls logged with agent identity, params, latency | 3hr | |
+| 17 | Unified audit logging: all tool calls logged with agent identity, params, latency | 3hr | [x] |
 | 18 | PyPI publish: setup.py/sdist, GitHub Action release workflow | 2hr | |
-| 19 | Rate limiting per tool/per agent | 2hr | |
+| 19 | Rate limiting per tool | 2hr | [x] |
 | 20 | Configuration hot-reload (no restart needed for new connectors) | 2hr | |
 
 **Sprint 4 total:** ~22 hours

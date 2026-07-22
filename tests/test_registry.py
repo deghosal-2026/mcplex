@@ -8,24 +8,25 @@ import json
 
 import pytest
 
-from mcplex.config import Config, ToolDef, ConnectorDef
+from mcplex.config import Config, ConnectorType, ToolDef, ConnectorDef
 from mcplex.registry import ToolRegistry
 
 
 @pytest.fixture
 def registry():
-    """A registry with a single native tool (no handler)."""
+    """A registry with a single HTTP tool (no handler)."""
     config = Config(
         connectors=[
             ConnectorDef(
                 name="test",
+                type=ConnectorType.http,
+                base_url="http://localhost:8000",
                 tools=[
                     ToolDef(
                         name="test_tool",
                         description="A test tool",
                         parameters={"input": {"type": "string"}},
                         returns={"type": "object"},
-                        permission="read",
                     )
                 ],
             )
@@ -44,10 +45,11 @@ def test_list_tools(registry):
 
 @pytest.mark.asyncio
 async def test_call_tool_unknown(registry):
-    """Calling a tool with no handler returns a JSON error."""
-    result = await registry.call_tool("nonexistent", {})
+    """Calling a tool with no handler returns a JSON error with is_error=True."""
+    result, is_error = await registry.call_tool("nonexistent", {})
     data = json.loads(result)
     assert "error" in data
+    assert is_error is True
 
 
 @pytest.mark.asyncio
@@ -57,9 +59,10 @@ async def test_call_tool_registered(registry):
         return json.dumps({"result": "ok"})
 
     registry.register_handler("test_tool", handler)
-    result = await registry.call_tool("test_tool", {})
+    result, is_error = await registry.call_tool("test_tool", {})
     data = json.loads(result)
     assert data["result"] == "ok"
+    assert is_error is False
 
 
 @pytest.mark.asyncio
@@ -69,9 +72,10 @@ async def test_call_tool_handler_exception(registry):
         raise ValueError("handler failed")
 
     registry.register_handler("test_tool", handler)
-    result = await registry.call_tool("test_tool", {})
+    result, is_error = await registry.call_tool("test_tool", {})
     data = json.loads(result)
     assert "error" in data
+    assert is_error is True
 
 
 def test_list_tools_empty_config():
@@ -84,7 +88,11 @@ def test_list_tools_empty_config():
 def test_registry_check_orphans_no_warning(registry, caplog):
     """check_orphans logs a warning for tools without handlers."""
     import logging
-    registry.register_handler("test_tool", lambda args: json.dumps({"ok": True}))
+
+    async def _ok_handler(args):
+        return json.dumps({"ok": True})
+
+    registry.register_handler("test_tool", _ok_handler)
     with caplog.at_level(logging.WARNING):
         registry.check_orphans()
     assert "has no handler" not in caplog.text
@@ -107,6 +115,31 @@ async def test_handler_collision_last_wins(registry):
         return json.dumps({"from": "second"})
     registry.register_handler("test_tool", first)
     registry.register_handler("test_tool", second)
-    result = await registry.call_tool("test_tool", {})
+    result, is_error = await registry.call_tool("test_tool", {})
     data = json.loads(result)
     assert data["from"] == "second"
+    assert is_error is False
+
+
+def test_has_handler_true(registry):
+    """has_handler returns True for a registered handler."""
+    registry.register_handler("test_tool", lambda args: "")
+    assert registry.has_handler("test_tool") is True
+
+
+def test_has_handler_false(registry):
+    """has_handler returns False for an unregistered tool name."""
+    assert registry.has_handler("nonexistent") is False
+
+
+@pytest.mark.asyncio
+async def test_call_tool_handler_returns_error_json(registry):
+    """A handler returning {"error": ...} JSON sets is_error=True."""
+    async def handler(args):
+        return json.dumps({"error": "backend failed"})
+
+    registry.register_handler("test_tool", handler)
+    result, is_error = await registry.call_tool("test_tool", {})
+    data = json.loads(result)
+    assert data["error"] == "backend failed"
+    assert is_error is True

@@ -20,7 +20,6 @@ connectors:
           pr_number:
             type: integer
             description: "Pull request number"
-        permission: read
 
       - name: guardian_get_coverage
         description: >
@@ -34,7 +33,6 @@ connectors:
           repo:
             type: string
             description: "Repository name"
-        permission: read
 
   - name: ci-agent
     type: http
@@ -47,9 +45,12 @@ connectors:
           method: POST
           path: /api/diagnose
         parameters:
-          repo: { type: string, description: "Repository name" }
-          run_id: { type: string, description: "CI run ID" }
-        permission: read
+          repo:
+            type: string
+            description: "Repository name"
+          run_id:
+            type: string
+            description: "CI run ID"
 
       - name: ci_get_pipeline_history
         description: >
@@ -58,9 +59,12 @@ connectors:
           method: GET
           path: /api/history
         parameters:
-          repo: { type: string, description: "Repository name" }
-          days: { type: integer, description: "Number of days to look back" }
-        permission: read
+          repo:
+            type: string
+            description: "Repository name"
+          days:
+            type: integer
+            description: "Number of days to look back"
 
   - name: sprintsense
     type: http
@@ -73,9 +77,12 @@ connectors:
           method: GET
           path: /api/dora/metrics
         parameters:
-          scope: { type: string, description: "Team or service name" }
-          days: { type: integer, description: "Lookback period in days" }
-        permission: read
+          scope:
+            type: string
+            description: "Team or service name"
+          days:
+            type: integer
+            description: "Lookback period in days"
 
       - name: dora_get_trend
         description: >
@@ -84,9 +91,12 @@ connectors:
           method: GET
           path: /api/dora/trend
         parameters:
-          scope: { type: string, description: "Team or service name" }
-          days: { type: integer, description: "Lookback period in days" }
-        permission: read
+          scope:
+            type: string
+            description: "Team or service name"
+          days:
+            type: integer
+            description: "Lookback period in days"
 
   - name: incident-commander
     type: http
@@ -99,9 +109,12 @@ connectors:
           method: GET
           path: /api/incidents/active
         parameters:
-          service: { type: string, description: "Filter by service name (optional)" }
-          severity: { type: string, description: "Filter by sev1/sev2/sev3 (optional)" }
-        permission: read
+          service:
+            type: string
+            description: "Filter by service name (optional)"
+          severity:
+            type: string
+            description: "Filter by sev1/sev2/sev3 (optional)"
 
       - name: incident_query_history
         description: >
@@ -110,9 +123,12 @@ connectors:
           method: GET
           path: /api/incidents/history
         parameters:
-          service: { type: string, description: "Filter by service name" }
-          days: { type: integer, description: "Number of days to look back" }
-        permission: read
+          service:
+            type: string
+            description: "Filter by service name"
+          days:
+            type: integer
+            description: "Number of days to look back"
 
       - name: incident_get_timeline
         description: >
@@ -121,5 +137,6 @@ connectors:
           method: GET
           path: /api/incidents/timeline
         parameters:
-          incident_id: { type: string, description: "Incident ID (e.g. INC-2026-142)" }
-        permission: read
+          incident_id:
+            type: string
+            description: "Incident ID (e.g. INC-2026-142)"

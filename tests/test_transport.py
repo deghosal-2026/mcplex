@@ -11,7 +11,7 @@ import json
 import pytest
 from starlette.testclient import TestClient
 
-from mcplex.config import Config, ToolDef, ConnectorDef
+from mcplex.config import Config, ConnectorType, ToolDef, ConnectorDef
 from mcplex.server import create_app
 
 
@@ -22,13 +22,14 @@ def client():
         connectors=[
             ConnectorDef(
                 name="test",
+                type=ConnectorType.http,
+                base_url="http://localhost:8000",
                 tools=[
                     ToolDef(
                         name="ping",
                         description="Ping tool",
                         parameters={},
                         returns={"type": "object"},
-                        permission="read",
                     )
                 ],
             )
@@ -157,7 +158,8 @@ def test_sse_framing(client):
     assert resp.status_code == 200
     assert resp.headers["content-type"].startswith("text/event-stream")
     body = resp.text
-    assert body.startswith("event: message\ndata: ")
+    assert ": heartbeat" in body
+    assert "event: message\ndata: " in body
     assert body.endswith("\n\n")
 
 
@@ -181,3 +183,72 @@ def test_sse_returns_json_when_no_sse_header(client):
     )
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/json"
+
+
+def test_tools_call_error_has_isError_flag(client):
+    """A failed tool call includes isError: true on the content block."""
+    resp = client.post("/mcp", json={
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "tools/call",
+        "params": {"name": "nonexistent", "arguments": {}},
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    content = data["result"]["content"][0]
+    assert content["isError"] is True
+    assert "error" in content["text"]
+
+
+def test_tools_call_success_no_isError(client):
+    """A successful tool call does not set isError."""
+    async def ping_handler(args):
+        return json.dumps({"pong": True})
+
+    client.app.state.registry.register_handler("ping", ping_handler)
+    resp = client.post("/mcp", json={
+        "jsonrpc": "2.0",
+        "id": 3,
+        "method": "tools/call",
+        "params": {"name": "ping", "arguments": {}},
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    content = data["result"]["content"][0]
+    assert "isError" not in content
+
+
+def test_json_rpc_batch_request(client):
+    """A JSON-RPC 2.0 batch array returns an array of responses."""
+    resp = client.post("/mcp", json=[
+        {"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+        {"jsonrpc": "2.0", "id": 2, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "test", "version": "0.1"}}},
+    ])
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)
+    assert len(data) == 2
+    assert data[0]["result"]["tools"] is not None
+    assert data[1]["result"]["serverInfo"]["name"] == "mcplex"
+
+
+def test_non_dict_json_body_returns_error(client):
+    """A non-object/non-array JSON body returns -32600 Invalid Request."""
+    resp = client.post("/mcp", json="bare string",
+                       headers={"Content-Type": "application/json"})
+    assert resp.status_code == 400
+    data = resp.json()
+    assert data["error"]["code"] == -32600
+
+
+def test_initialized_notification_sse(client):
+    """initialized with Accept: text/event-stream returns an SSE frame, not JSON."""
+    resp = client.post(
+        "/mcp",
+        json={"jsonrpc": "2.0", "id": 2, "method": "initialized"},
+        headers={"Accept": "text/event-stream"},
+    )
+    assert resp.status_code == 200
+    assert resp.headers["content-type"].startswith("text/event-stream")
+    assert ": heartbeat" in resp.text
+    assert "event: message" in resp.text

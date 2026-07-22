@@ -46,18 +46,33 @@ ACTIVE_INCIDENTS = [
 ]
 
 # ── Historical incidents (resolved) ────────────────────────────────
-HISTORICAL_INCIDENTS = [
-    {"id": "INC-2026-101", "title": "Database connection pool exhausted", "severity": "sev1", "service": "payment-service", "date": "2026-06-28", "root_cause": "Connection leak in order worker", "resolved": True},
-    {"id": "INC-2026-102", "title": "Redis cluster failover", "severity": "sev2", "service": "auth-service", "date": "2026-06-30", "root_cause": "Memory pressure on primary node", "resolved": True},
-    {"id": "INC-2026-105", "title": "Deploy caused 5xx spike", "severity": "sev1", "service": "api-gateway", "date": "2026-07-02", "root_cause": "Missing env var in new release", "resolved": True},
-    {"id": "INC-2026-108", "title": "Certificate expiry alert", "severity": "sev3", "service": "api-gateway", "date": "2026-07-05", "root_cause": "Auto-renewal cron job failed", "resolved": True},
-    {"id": "INC-2026-112", "title": "Payment timeout for high-value orders", "severity": "sev2", "service": "payment-service", "date": "2026-07-08", "root_cause": "Third-party provider rate limit hit", "resolved": True},
-    {"id": "INC-2026-115", "title": "Auth tokens not refreshing", "severity": "sev2", "service": "auth-service", "date": "2026-07-10", "root_cause": "JWT library upgrade changed expiry behavior", "resolved": True},
-    {"id": "INC-2026-120", "title": "API gateway memory leak", "severity": "sev3", "service": "api-gateway", "date": "2026-07-12", "root_cause": "Unbounded request logging", "resolved": True},
-    {"id": "INC-2026-125", "title": "Payment service degraded after deploy", "severity": "sev2", "service": "payment-service", "date": "2026-07-15", "root_cause": "Config map not updated for new region", "resolved": True},
-    {"id": "INC-2026-130", "title": "Auth DB migration rollback", "severity": "sev1", "service": "auth-service", "date": "2026-07-17", "root_cause": "Migration script had destructive ALTER", "resolved": True},
-    {"id": "INC-2026-135", "title": "CI pipeline secret rotation failure", "severity": "sev3", "service": "api-gateway", "date": "2026-07-19", "root_cause": "Secret not rotated in all regions", "resolved": True},
-]
+# Dates are generated relative to today so the mock data never goes stale.
+def _make_historical_incidents():
+    today = datetime.now(timezone.utc)
+    offsets = [23, 21, 19, 16, 13, 11, 9, 6, 4, 2]
+    titles = [
+        ("Database connection pool exhausted", "sev1", "payment-service", "Connection leak in order worker"),
+        ("Redis cluster failover", "sev2", "auth-service", "Memory pressure on primary node"),
+        ("Deploy caused 5xx spike", "sev1", "api-gateway", "Missing env var in new release"),
+        ("Certificate expiry alert", "sev3", "api-gateway", "Auto-renewal cron job failed"),
+        ("Payment timeout for high-value orders", "sev2", "payment-service", "Third-party provider rate limit hit"),
+        ("Auth tokens not refreshing", "sev2", "auth-service", "JWT library upgrade changed expiry behavior"),
+        ("API gateway memory leak", "sev3", "api-gateway", "Unbounded request logging"),
+        ("Payment service degraded after deploy", "sev2", "payment-service", "Config map not updated for new region"),
+        ("Auth DB migration rollback", "sev1", "auth-service", "Migration script had destructive ALTER"),
+        ("CI pipeline secret rotation failure", "sev3", "api-gateway", "Secret not rotated in all regions"),
+    ]
+    incidents = []
+    for i, (title, sev, svc, cause) in enumerate(titles):
+        date = (today - timedelta(days=offsets[i])).strftime("%Y-%m-%d")
+        incidents.append({
+            "id": f"INC-2026-{101 + i}",
+            "title": title, "severity": sev, "service": svc,
+            "date": date, "root_cause": cause, "resolved": True,
+        })
+    return incidents
+
+HISTORICAL_INCIDENTS = _make_historical_incidents()
 
 # ── Incident timelines (event sequences per incident) ──────────────
 INCIDENT_TIMELINES = {
@@ -119,16 +134,17 @@ async def handle_query_history(args: dict) -> str:
     results = HISTORICAL_INCIDENTS
     if service:
         results = [i for i in results if i["service"] == service]
-    results = [
-        i for i in results
-        if datetime.strptime(i["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc) >= cutoff
-    ]
+    if days < 365:
+        results = [
+            i for i in results
+            if datetime.strptime(i["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc) >= cutoff
+        ]
     return json.dumps({"incidents": results})
 
 
 async def handle_get_timeline(args: dict) -> str:
     """Return the full timeline for a given incident_id."""
-    incident_id = args.get("incident_id")
+    incident_id = args.get("incident_id", "")
     timeline = INCIDENT_TIMELINES.get(incident_id)
     if not timeline:
         return json.dumps({"error": f"incident {incident_id} not found"})

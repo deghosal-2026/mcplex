@@ -18,7 +18,7 @@ from mcplex.connectors.incidentgpt import register as register_incidentgpt
 logger = logging.getLogger(__name__)
 
 
-def register_all(registry, config=None):
+def register_all(registry, config=None, shared_client=None):
     """Register all connector handlers into *registry*.
 
     Parameters
@@ -28,8 +28,10 @@ def register_all(registry, config=None):
     config : Config or None
         Parsed configuration.  If ``None``, only native connectors
         are registered (legacy fallback).
+    shared_client : httpx.AsyncClient or None
+        Shared HTTP client for connection pooling.  If None, each
+        handler creates its own client per call.
     """
-    # Collect tool names the config will cover via HTTP proxy
     http_tool_names = set()
     if config:
         for connector in config.connectors:
@@ -38,7 +40,6 @@ def register_all(registry, config=None):
                     if tool.http:
                         http_tool_names.add(tool.name)
 
-    # Register native incidentgpt handlers only for tools NOT covered by HTTP config
     register_incidentgpt(registry, skip_names=http_tool_names)
 
     if config:
@@ -48,10 +49,11 @@ def register_all(registry, config=None):
             for tool in connector.tools:
                 if not tool.http:
                     continue
-                if tool.name in registry._handlers:
+                if registry.has_handler(tool.name):
                     logger.warning(
                         "Tool %r defined by connector %r overrides existing handler",
                         tool.name, connector.name,
                     )
-                handler = make_proxy_handler(connector.base_url, tool.http)
+                handler = make_proxy_handler(connector.base_url, tool.http,
+                                              tool.parameters, shared_client)
                 registry.register_handler(tool.name, handler)

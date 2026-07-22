@@ -20,8 +20,7 @@ connectors:
           pr_number:
             type: integer
             description: "Pull request number"
-        permission: read
-
+        
       - name: guardian_get_coverage
         description: >
           Get governance coverage score for a repository.
@@ -35,8 +34,7 @@ connectors:
           repo:
             type: string
             description: "Repository name"
-        permission: read
-
+        
   - name: ci-agent
     type: http
     base_url: http://ci-doctor:8080
@@ -58,8 +56,7 @@ connectors:
           run_id:
             type: string
             description: "CI run ID"
-        permission: read
-
+        
       - name: ci_get_pipeline_history
         description: >
           Get CI pipeline history with failure pattern analysis.
@@ -76,8 +73,7 @@ connectors:
           days:
             type: integer
             description: "Number of days to look back"
-        permission: read
-
+        
   - name: sprintsense
     type: http
     base_url: http://sprint-intel:5000
@@ -99,8 +95,7 @@ connectors:
           days:
             type: integer
             description: "Lookback period in days"
-        permission: read
-
+        
       - name: dora_get_trend
         description: >
           Get DORA metrics trend over a configurable period.
@@ -117,8 +112,7 @@ connectors:
           days:
             type: integer
             description: "Lookback period in days"
-        permission: read
-
+        
   - name: incident-commander
     type: http
     base_url: http://test-bench:8004
@@ -140,8 +134,7 @@ connectors:
           severity:
             type: string
             description: "Filter by sev1/sev2/sev3 (optional)"
-        permission: read
-
+        
       - name: incident_query_history
         description: >
           Query historical incidents with optional filters for service and time range.
@@ -158,8 +151,7 @@ connectors:
           days:
             type: integer
             description: "Number of days to look back"
-        permission: read
-
+        
       - name: incident_get_timeline
         description: >
           Get full incident timeline with all events, decisions, and correlated deploys.
@@ -172,4 +164,4 @@ connectors:
           incident_id:
             type: string
             description: "Incident ID (e.g. INC-2026-142)"
-        permission: read
+        
