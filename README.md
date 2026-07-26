@@ -5,6 +5,7 @@
 [![Version](https://img.shields.io/badge/version-0.4.0-blue)](https://github.com/deghosal-2026/mcplex/releases)
 [![CI](https://github.com/deghosal-2026/mcplex/actions/workflows/ci.yml/badge.svg)](.github/workflows/ci.yml)
 [![MCP](https://img.shields.io/badge/MCP-2025--06--18-purple)](docs/spec/mcplex.md)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13801/badge)](https://www.bestpractices.dev/projects/13801)
 
 > Early proof-of-concept: a YAML-configured MCP proxy that maps simple JSON REST endpoints (GET + query params, POST + JSON body) into MCP tools. Not production-hardened — see [Roadmap](#roadmap).
 
