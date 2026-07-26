@@ -53,10 +53,14 @@ tests/
 
 ## Code Style
 
-- Follow the existing code patterns (type hints, docstrings, async/await)
-- Use `json.dumps()` for constructing JSON strings, never f-string JSON
-- Add module-level docstrings to new files
-- Every function should have a docstring explaining what it does
+All contributions must follow these coding standards:
+
+- **Python:** [PEP 8](https://peps.python.org/pep-0008/) via Ruff with the ruleset in [`pyproject.toml`](pyproject.toml).
+- **JSON:** Use `json.dumps()` for constructing JSON strings, never f-string JSON.
+- **Documentation:** Add module-level docstrings to new files. Every function should have a docstring explaining what it does.
+- **Async:** Follow existing async/await patterns.
+- **Type safety:** Type hints required on all public functions.
+- **Commit messages:** [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `test:`).
 - Tests use pytest with `@pytest.mark.asyncio` for async tests
 
 ## Testing Policy
