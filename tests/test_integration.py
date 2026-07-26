@@ -34,8 +34,9 @@ def _mock_error_backend(request: httpx.Request) -> httpx.Response:
 
 def _mock_html_backend(request: httpx.Request) -> httpx.Response:
     """Mock backend that returns HTML instead of JSON."""
-    return httpx.Response(200, content="<html>dashboard</html>",
-                          headers={"content-type": "text/html"})
+    return httpx.Response(
+        200, content="<html>dashboard</html>", headers={"content-type": "text/html"}
+    )
 
 
 @pytest.fixture
@@ -60,16 +61,24 @@ def app_with_mock():
                     ToolDef(
                         name="test_get",
                         description="GET test tool",
-                        parameters={"name": {"type": "string", "description": "A name"}},
-                        http=HttpToolConfig(method="GET", path="/api/test",
-                                            param_mapping={"name": "name"}),
+                        parameters={
+                            "name": {"type": "string", "description": "A name"}
+                        },
+                        http=HttpToolConfig(
+                            method="GET",
+                            path="/api/test",
+                            param_mapping={"name": "name"},
+                        ),
                     ),
                     ToolDef(
                         name="test_post",
                         description="POST test tool",
                         parameters={"data": {"type": "string", "description": "Data"}},
-                        http=HttpToolConfig(method="POST", path="/api/submit",
-                                            param_mapping={"data": "data"}),
+                        http=HttpToolConfig(
+                            method="POST",
+                            path="/api/submit",
+                            param_mapping={"data": "data"},
+                        ),
                     ),
                 ],
             ),
@@ -82,9 +91,14 @@ def app_with_mock():
 def test_integration_tools_list(app_with_mock):
     """tools/list returns both registered tools."""
     client = TestClient(app_with_mock)
-    resp = client.post("/mcp", json={
-        "jsonrpc": "2.0", "id": 1, "method": "tools/list",
-    })
+    resp = client.post(
+        "/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "tools/list",
+        },
+    )
     tools = resp.json()["result"]["tools"]
     assert len(tools) == 2
     assert {t["name"] for t in tools} == {"test_get", "test_post"}
@@ -94,10 +108,15 @@ def test_integration_get_success(app_with_mock):
     """GET tool call proxies to mock backend and returns echoed params."""
     client = TestClient(app_with_mock)
     client_identity.set({"name": "test-agent", "version": "1.0"})
-    resp = client.post("/mcp", json={
-        "jsonrpc": "2.0", "id": 2, "method": "tools/call",
-        "params": {"name": "test_get", "arguments": {"name": "hello"}},
-    })
+    resp = client.post(
+        "/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "tools/call",
+            "params": {"name": "test_get", "arguments": {"name": "hello"}},
+        },
+    )
     data = resp.json()
     text = data["result"]["content"][0]["text"]
     parsed = json.loads(text)
@@ -108,10 +127,15 @@ def test_integration_get_success(app_with_mock):
 def test_integration_post_success(app_with_mock):
     """POST tool call proxies to mock backend and returns echoed body."""
     client = TestClient(app_with_mock)
-    resp = client.post("/mcp", json={
-        "jsonrpc": "2.0", "id": 3, "method": "tools/call",
-        "params": {"name": "test_post", "arguments": {"data": "payload"}},
-    })
+    resp = client.post(
+        "/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 3,
+            "method": "tools/call",
+            "params": {"name": "test_post", "arguments": {"data": "payload"}},
+        },
+    )
     data = resp.json()
     text = data["result"]["content"][0]["text"]
     parsed = json.loads(text)
@@ -130,9 +154,14 @@ def test_integration_validation_error():
                     ToolDef(
                         name="typed_tool",
                         description="Typed tool",
-                        parameters={"count": {"type": "integer", "description": "A count"}},
-                        http=HttpToolConfig(method="GET", path="/api/test",
-                                            param_mapping={"count": "count"}),
+                        parameters={
+                            "count": {"type": "integer", "description": "A count"}
+                        },
+                        http=HttpToolConfig(
+                            method="GET",
+                            path="/api/test",
+                            param_mapping={"count": "count"},
+                        ),
                     ),
                 ],
             ),
@@ -140,10 +169,15 @@ def test_integration_validation_error():
     )
     app = create_app(config)
     client = TestClient(app)
-    resp = client.post("/mcp", json={
-        "jsonrpc": "2.0", "id": 4, "method": "tools/call",
-        "params": {"name": "typed_tool", "arguments": {"count": "not-an-int"}},
-    })
+    resp = client.post(
+        "/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 4,
+            "method": "tools/call",
+            "params": {"name": "typed_tool", "arguments": {"count": "not-an-int"}},
+        },
+    )
     data = resp.json()
     assert "error" in data
     assert data["error"]["code"] == -32602
@@ -152,10 +186,15 @@ def test_integration_validation_error():
 def test_integration_unknown_tool(app_with_mock):
     """Calling an unknown tool returns isError."""
     client = TestClient(app_with_mock)
-    resp = client.post("/mcp", json={
-        "jsonrpc": "2.0", "id": 5, "method": "tools/call",
-        "params": {"name": "nonexistent", "arguments": {}},
-    })
+    resp = client.post(
+        "/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 5,
+            "method": "tools/call",
+            "params": {"name": "nonexistent", "arguments": {}},
+        },
+    )
     data = resp.json()
     assert data["result"]["content"][0]["isError"] is True
 
@@ -188,8 +227,12 @@ def test_integration_initialize_and_list():
                 type=ConnectorType.http,
                 base_url="http://mock",
                 tools=[
-                    ToolDef(name="t1", description="Tool 1", parameters={},
-                            http=HttpToolConfig(method="GET", path="/t1")),
+                    ToolDef(
+                        name="t1",
+                        description="Tool 1",
+                        parameters={},
+                        http=HttpToolConfig(method="GET", path="/t1"),
+                    ),
                 ],
             ),
         ],
@@ -197,16 +240,29 @@ def test_integration_initialize_and_list():
     app = create_app(config)
     client = TestClient(app)
 
-    init_resp = client.post("/mcp", json={
-        "jsonrpc": "2.0", "id": 1, "method": "initialize",
-        "params": {"protocolVersion": "2025-06-18", "capabilities": {},
-                   "clientInfo": {"name": "test-client", "version": "1.0"}},
-    })
+    init_resp = client.post(
+        "/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2025-06-18",
+                "capabilities": {},
+                "clientInfo": {"name": "test-client", "version": "1.0"},
+            },
+        },
+    )
     assert init_resp.json()["result"]["serverInfo"]["name"] == "mcplex"
 
-    list_resp = client.post("/mcp", json={
-        "jsonrpc": "2.0", "id": 2, "method": "tools/list",
-    })
+    list_resp = client.post(
+        "/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "tools/list",
+        },
+    )
     tools = list_resp.json()["result"]["tools"]
     assert len(tools) == 1
     assert tools[0]["name"] == "t1"

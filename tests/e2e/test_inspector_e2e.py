@@ -35,24 +35,51 @@ SCREENSHOT_DIR = Path(__file__).parent / "screenshots"
 SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
 TOOLS_TO_TEST = [
-    {"tool": "guardian_check_policy", "args": {"repo": "my-org/payment-service", "pr_number": "42"},
-     "expect_keys": ["passed", "rules"]},
-    {"tool": "guardian_get_coverage", "args": {"repo": "my-org/payment-service"},
-     "expect_keys": ["coverage_pct", "total_prs"]},
-    {"tool": "ci_diagnose_failure", "args": {"repo": "my-org/payment-service", "run_id": "123"},
-     "expect_keys": ["root_cause", "suggested_fix"]},
-    {"tool": "ci_get_pipeline_history", "args": {"repo": "my-org/payment-service", "days": "30"},
-     "expect_keys": ["total_runs", "pass_rate"]},
-    {"tool": "dora_get_metrics", "args": {"scope": "platform-team", "days": "30"},
-     "expect_keys": ["deploy_frequency", "lead_time"]},
-    {"tool": "dora_get_trend", "args": {"scope": "platform-team", "days": "90"},
-     "expect_keys": ["weekly"]},
-    {"tool": "incident_query_active", "args": {"severity": "sev2"},
-     "expect_keys": ["incidents"]},
-    {"tool": "incident_query_history", "args": {"service": "payment-service", "days": "30"},
-     "expect_keys": ["incidents"]},
-    {"tool": "incident_get_timeline", "args": {"incident_id": "INC-2026-142"},
-     "expect_keys": ["events"]},
+    {
+        "tool": "guardian_check_policy",
+        "args": {"repo": "my-org/payment-service", "pr_number": "42"},
+        "expect_keys": ["passed", "rules"],
+    },
+    {
+        "tool": "guardian_get_coverage",
+        "args": {"repo": "my-org/payment-service"},
+        "expect_keys": ["coverage_pct", "total_prs"],
+    },
+    {
+        "tool": "ci_diagnose_failure",
+        "args": {"repo": "my-org/payment-service", "run_id": "123"},
+        "expect_keys": ["root_cause", "suggested_fix"],
+    },
+    {
+        "tool": "ci_get_pipeline_history",
+        "args": {"repo": "my-org/payment-service", "days": "30"},
+        "expect_keys": ["total_runs", "pass_rate"],
+    },
+    {
+        "tool": "dora_get_metrics",
+        "args": {"scope": "platform-team", "days": "30"},
+        "expect_keys": ["deploy_frequency", "lead_time"],
+    },
+    {
+        "tool": "dora_get_trend",
+        "args": {"scope": "platform-team", "days": "90"},
+        "expect_keys": ["weekly"],
+    },
+    {
+        "tool": "incident_query_active",
+        "args": {"severity": "sev2"},
+        "expect_keys": ["incidents"],
+    },
+    {
+        "tool": "incident_query_history",
+        "args": {"service": "payment-service", "days": "30"},
+        "expect_keys": ["incidents"],
+    },
+    {
+        "tool": "incident_get_timeline",
+        "args": {"incident_id": "INC-2026-142"},
+        "expect_keys": ["events"],
+    },
 ]
 
 
@@ -61,8 +88,14 @@ def launch_inspector():
     env = os.environ.copy()
     env["DANGEROUSLY_OMIT_AUTH"] = "true"
     proc = subprocess.Popen(
-        ["npx", "@modelcontextprotocol/inspector",
-         "--transport", "http", "--server-url", MCP_SERVER_URL],
+        [
+            "npx",
+            "@modelcontextprotocol/inspector",
+            "--transport",
+            "http",
+            "--server-url",
+            MCP_SERVER_URL,
+        ],
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -108,9 +141,13 @@ async def click_combobox_option(page, dropdown, option_text):
 async def fill_arg(page, key, value):
     """Fill a tool argument input by key name."""
     # Try id, name, placeholder
-    for sel in [f"input#{key}", f"input[name='{key}']",
-                f"input[placeholder*='{key}']",
-                f"textarea#{key}", f"textarea[name='{key}']"]:
+    for sel in [
+        f"input#{key}",
+        f"input[name='{key}']",
+        f"input[placeholder*='{key}']",
+        f"textarea#{key}",
+        f"textarea[name='{key}']",
+    ]:
         loc = page.locator(sel).first
         if await loc.is_visible(timeout=800):
             await loc.fill(str(value))
@@ -159,12 +196,16 @@ async def run():
 
             # 4. Enter server URL
             print("\n[4/7] Entering server URL...")
-            url_input = await wait_visible(page, [
-                "input#sse-url-input",
-                "input[id*='url']",
-                "input[placeholder*='URL']",
-                "#command-input",
-            ], timeout=3000)
+            url_input = await wait_visible(
+                page,
+                [
+                    "input#sse-url-input",
+                    "input[id*='url']",
+                    "input[placeholder*='URL']",
+                    "#command-input",
+                ],
+                timeout=3000,
+            )
             if url_input:
                 await url_input.fill(MCP_SERVER_URL)
                 print(f"   ✓ Entered URL: {MCP_SERVER_URL}")
@@ -205,10 +246,15 @@ async def run():
                 tool_name = t["tool"]
                 args = t["args"]
                 expect_keys = t["expect_keys"]
-                label = f"[{i+1}/{len(TOOLS_TO_TEST)}]"
+                label = f"[{i + 1}/{len(TOOLS_TO_TEST)}]"
 
                 print(f"\n{label} {tool_name}")
-                result = {"tool": tool_name, "args": args, "status": "fail", "response": ""}
+                result = {
+                    "tool": tool_name,
+                    "args": args,
+                    "status": "fail",
+                    "response": "",
+                }
 
                 try:
                     # Click the tool name in the list
@@ -247,17 +293,22 @@ async def run():
 
                     # Check for success/error indicator
                     if "Tool Result: Success" in body:
-                        result_section = body.split("Tool Result: Success")[1].split("History")[0]
+                        result_section = body.split("Tool Result: Success")[1].split(
+                            "History"
+                        )[0]
                         print("   ✓ Got result")
                     elif "Tool Result:" in body:
-                        result_section = body.split("Tool Result:")[1].split("History")[0]
+                        result_section = body.split("Tool Result:")[1].split("History")[
+                            0
+                        ]
                         print("   ~ Got result (status unclear)")
                     else:
                         result_section = body[-800:]
                         print("   ~ No clear result section")
 
                     await page.screenshot(
-                        path=screenshot_path(f"06-{(i+1):02d}-{tool_name}.png"))
+                        path=screenshot_path(f"06-{(i + 1):02d}-{tool_name}.png")
+                    )
 
                     # Validate: check expected keys appear in the result text
                     found_keys = [k for k in expect_keys if k in result_section]
@@ -276,13 +327,15 @@ async def run():
                     print(f"   ✗ ERROR — {e}")
                     result["response"] = str(e)
                     await page.screenshot(
-                        path=screenshot_path(f"06-{(i+1):02d}-{tool_name}-error.png"))
+                        path=screenshot_path(f"06-{(i + 1):02d}-{tool_name}-error.png")
+                    )
 
                 results.append(result)
 
             # Final screenshot — tools list overview
-            await page.screenshot(path=screenshot_path("07-final-overview.png"),
-                                  full_page=True)
+            await page.screenshot(
+                path=screenshot_path("07-final-overview.png"), full_page=True
+            )
             await browser.close()
 
     finally:

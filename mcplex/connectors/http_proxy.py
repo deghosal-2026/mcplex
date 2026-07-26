@@ -40,19 +40,41 @@ def validate_args(args: dict, schema: dict) -> tuple[bool, str]:
                 errors.append(f"{param_name!r}: required parameter missing")
             continue
         if expected_type == "integer" and not isinstance(value, int):
-            errors.append(f"{param_name!r}: expected integer, got {type(value).__name__}")
+            errors.append(
+                f"{param_name!r}: expected integer, got {type(value).__name__}"
+            )
         elif expected_type == "string" and not isinstance(value, str):
-            errors.append(f"{param_name!r}: expected string, got {type(value).__name__}")
+            errors.append(
+                f"{param_name!r}: expected string, got {type(value).__name__}"
+            )
         elif expected_type == "number" and not isinstance(value, (int, float)):
-            errors.append(f"{param_name!r}: expected number, got {type(value).__name__}")
+            errors.append(
+                f"{param_name!r}: expected number, got {type(value).__name__}"
+            )
         elif expected_type == "boolean" and not isinstance(value, bool):
-            errors.append(f"{param_name!r}: expected boolean, got {type(value).__name__}")
+            errors.append(
+                f"{param_name!r}: expected boolean, got {type(value).__name__}"
+            )
         if "enum" in param_schema and value not in param_schema["enum"]:
-            errors.append(f"{param_name!r}: value {value!r} not in enum {param_schema['enum']}")
-        if "minimum" in param_schema and isinstance(value, (int, float)) and value < param_schema["minimum"]:
-            errors.append(f"{param_name!r}: value {value} below minimum {param_schema['minimum']}")
-        if "maximum" in param_schema and isinstance(value, (int, float)) and value > param_schema["maximum"]:
-            errors.append(f"{param_name!r}: value {value} above maximum {param_schema['maximum']}")
+            errors.append(
+                f"{param_name!r}: value {value!r} not in enum {param_schema['enum']}"
+            )
+        if (
+            "minimum" in param_schema
+            and isinstance(value, (int, float))
+            and value < param_schema["minimum"]
+        ):
+            errors.append(
+                f"{param_name!r}: value {value} below minimum {param_schema['minimum']}"
+            )
+        if (
+            "maximum" in param_schema
+            and isinstance(value, (int, float))
+            and value > param_schema["maximum"]
+        ):
+            errors.append(
+                f"{param_name!r}: value {value} above maximum {param_schema['maximum']}"
+            )
 
     unknown = set(args.keys()) - set(schema.keys())
     if unknown:
@@ -63,9 +85,12 @@ def validate_args(args: dict, schema: dict) -> tuple[bool, str]:
     return True, ""
 
 
-def make_proxy_handler(base_url: str, http_config: HttpToolConfig,
-                       parameters: dict | None = None,
-                       shared_client: httpx.AsyncClient | None = None):
+def make_proxy_handler(
+    base_url: str,
+    http_config: HttpToolConfig,
+    parameters: dict | None = None,
+    shared_client: httpx.AsyncClient | None = None,
+):
     """Return an async handler that proxies to *base_url* + *http_config.path*.
 
     The returned handler accepts ``args: dict`` (the MCP tool arguments)
@@ -74,6 +99,7 @@ def make_proxy_handler(base_url: str, http_config: HttpToolConfig,
     If *shared_client* is provided, it is reused for connection pooling;
     otherwise a new client is created per call.
     """
+
     async def handler(args: dict) -> str:
         if parameters:
             is_valid, err_msg = validate_args(args, parameters)
@@ -95,9 +121,11 @@ def make_proxy_handler(base_url: str, http_config: HttpToolConfig,
 
         mapping = http_config.param_mapping
         if mapping:
-            mapped = {api_key: args[mcp_key]
-                      for mcp_key, api_key in mapping.items()
-                      if mcp_key in args}
+            mapped = {
+                api_key: args[mcp_key]
+                for mcp_key, api_key in mapping.items()
+                if mcp_key in args
+            }
         else:
             mapped = dict(args)
 
@@ -105,7 +133,9 @@ def make_proxy_handler(base_url: str, http_config: HttpToolConfig,
         current_call.set(meta)
 
         timeout = httpx.Timeout(BACKEND_TIMEOUT_SECONDS)
-        client_ctx = shared_client or httpx.AsyncClient(timeout=timeout, follow_redirects=True)
+        client_ctx = shared_client or httpx.AsyncClient(
+            timeout=timeout, follow_redirects=True
+        )
         try:
             try:
                 if http_config.method.upper() == "GET":
@@ -113,10 +143,16 @@ def make_proxy_handler(base_url: str, http_config: HttpToolConfig,
                 elif http_config.method.upper() == "POST":
                     resp = await client_ctx.post(url, json=mapped, headers=headers)
                 else:
-                    return json.dumps({"error": f"Unsupported HTTP method: {http_config.method}"})
+                    return json.dumps(
+                        {"error": f"Unsupported HTTP method: {http_config.method}"}
+                    )
             except httpx.TimeoutException:
-                logger.warning("Backend timeout for %s (%.1fs)", url, BACKEND_TIMEOUT_SECONDS)
-                return json.dumps({"error": f"Backend timed out after {BACKEND_TIMEOUT_SECONDS}s"})
+                logger.warning(
+                    "Backend timeout for %s (%.1fs)", url, BACKEND_TIMEOUT_SECONDS
+                )
+                return json.dumps(
+                    {"error": f"Backend timed out after {BACKEND_TIMEOUT_SECONDS}s"}
+                )
             except httpx.RequestError as e:
                 logger.warning("Backend request failed for %s: %s", url, e)
                 return json.dumps({"error": f"Backend unreachable: {e}"})
@@ -125,20 +161,26 @@ def make_proxy_handler(base_url: str, http_config: HttpToolConfig,
 
             if resp.status_code >= 400:
                 snippet = resp.text[:200]
-                return json.dumps({
-                    "error": f"Backend returned {resp.status_code}",
-                    "detail": snippet,
-                })
+                return json.dumps(
+                    {
+                        "error": f"Backend returned {resp.status_code}",
+                        "detail": snippet,
+                    }
+                )
 
             content_type = resp.headers.get("content-type", "")
             try:
                 json.loads(resp.text)
                 return resp.text
             except (json.JSONDecodeError, ValueError):
-                logger.warning("Backend returned non-JSON for %s: %.100s", url, resp.text)
+                logger.warning(
+                    "Backend returned non-JSON for %s: %.100s", url, resp.text
+                )
                 if "html" in content_type.lower():
                     return json.dumps({"html": resp.text[:5000]})
-                return json.dumps({"content": resp.text[:5000], "content_type": content_type})
+                return json.dumps(
+                    {"content": resp.text[:5000], "content_type": content_type}
+                )
         finally:
             if shared_client is None:
                 await client_ctx.aclose()

@@ -31,7 +31,9 @@ class ToolRegistry:
                     "connector": connector.name,
                 }
 
-    def register_handler(self, tool_name: str, handler: Callable[..., Awaitable[str]]) -> None:
+    def register_handler(
+        self, tool_name: str, handler: Callable[..., Awaitable[str]]
+    ) -> None:
         """Bind an async handler to a tool name."""
         self._handlers[tool_name] = handler
 
@@ -40,7 +42,9 @@ class ToolRegistry:
         for name in sorted(self._tools):
             if name not in self._handlers:
                 connector = self._tools[name]["connector"]
-                logger.warning("Tool %r (connector: %s) has no handler registered", name, connector)
+                logger.warning(
+                    "Tool %r (connector: %s) has no handler registered", name, connector
+                )
 
     def list_tools(self) -> list[dict]:
         """Build the MCP ``tools/list`` response payload."""

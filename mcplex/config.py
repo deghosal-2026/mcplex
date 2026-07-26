@@ -24,6 +24,7 @@ _ENV_VAR_RE = re.compile(r"\$\{([A-Z_][A-Z0-9_]*)(?::-(.*?))?\}")
 
 class ConnectorType(str, Enum):
     """Valid connector types."""
+
     http = "http"
 
 
@@ -41,6 +42,7 @@ class HttpToolConfig(BaseModel):
     headers : dict[str, str]
         Static headers injected on every request to this tool.
     """
+
     method: str = "GET"
     path: str
     param_mapping: dict[str, str] = Field(default_factory=dict)
@@ -49,6 +51,7 @@ class HttpToolConfig(BaseModel):
 
 class ToolDef(BaseModel):
     """A single MCP tool exposed to the agent."""
+
     name: str
     description: str
     parameters: dict
@@ -58,6 +61,7 @@ class ToolDef(BaseModel):
 
 class ConnectorDef(BaseModel):
     """A backend service that provides one or more tools."""
+
     name: str
     type: ConnectorType = ConnectorType.http
     base_url: str = ""
@@ -76,6 +80,7 @@ class ConnectorDef(BaseModel):
 
 class Config(BaseModel):
     """Top-level config holding all connector definitions."""
+
     connectors: list[ConnectorDef]
     rate_limits: dict[str, dict] = Field(default_factory=dict)
     """Per-tool rate limits.  Keys are tool names; values have
@@ -85,10 +90,12 @@ class Config(BaseModel):
 def _interpolate_env(value):
     """Recursively resolve ${VAR} and ${VAR:-default} patterns in strings."""
     if isinstance(value, str):
+
         def _replacer(match):
             var_name = match.group(1)
             default = match.group(2)
             return os.environ.get(var_name, default if default is not None else "")
+
         return _ENV_VAR_RE.sub(_replacer, value)
     if isinstance(value, dict):
         return {k: _interpolate_env(v) for k, v in value.items()}

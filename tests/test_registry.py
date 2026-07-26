@@ -55,6 +55,7 @@ async def test_call_tool_unknown(registry):
 @pytest.mark.asyncio
 async def test_call_tool_registered(registry):
     """A registered handler is invoked with the provided arguments."""
+
     async def handler(args):
         return json.dumps({"result": "ok"})
 
@@ -68,6 +69,7 @@ async def test_call_tool_registered(registry):
 @pytest.mark.asyncio
 async def test_call_tool_handler_exception(registry):
     """An exception in a handler is caught and returned as a JSON error."""
+
     async def handler(args):
         raise ValueError("handler failed")
 
@@ -101,6 +103,7 @@ def test_registry_check_orphans_no_warning(registry, caplog):
 def test_registry_check_orphans_with_orphan(registry, caplog):
     """A tool with no handler triggers a warning."""
     import logging
+
     with caplog.at_level(logging.WARNING):
         registry.check_orphans()
     assert "has no handler" in caplog.text
@@ -109,10 +112,13 @@ def test_registry_check_orphans_with_orphan(registry, caplog):
 @pytest.mark.asyncio
 async def test_handler_collision_last_wins(registry):
     """Registering two handlers for the same tool uses the last one."""
+
     async def first(args):
         return json.dumps({"from": "first"})
+
     async def second(args):
         return json.dumps({"from": "second"})
+
     registry.register_handler("test_tool", first)
     registry.register_handler("test_tool", second)
     result, is_error = await registry.call_tool("test_tool", {})
@@ -135,6 +141,7 @@ def test_has_handler_false(registry):
 @pytest.mark.asyncio
 async def test_call_tool_handler_returns_error_json(registry):
     """A handler returning {"error": ...} JSON sets is_error=True."""
+
     async def handler(args):
         return json.dumps({"error": "backend failed"})
 

@@ -103,9 +103,7 @@ def test_load_config_http_connector(tmp_path):
 def test_load_config_missing_base_url(tmp_path):
     """An HTTP connector with no base_url raises a validation error."""
     config_data = {
-        "connectors": [
-            {"name": "bad", "type": "http", "base_url": "", "tools": []}
-        ]
+        "connectors": [{"name": "bad", "type": "http", "base_url": "", "tools": []}]
     }
     config_file = tmp_path / "config.yaml"
     config_file.write_text(yaml.dump(config_data))
@@ -115,11 +113,7 @@ def test_load_config_missing_base_url(tmp_path):
 
 def test_load_config_invalid_connector_type(tmp_path):
     """An invalid connector type raises a Pydantic validation error."""
-    config_data = {
-        "connectors": [
-            {"name": "bad", "type": "invalid_type", "tools": []}
-        ]
-    }
+    config_data = {"connectors": [{"name": "bad", "type": "invalid_type", "tools": []}]}
     config_file = tmp_path / "config.yaml"
     config_file.write_text(yaml.dump(config_data))
     with pytest.raises(Exception):

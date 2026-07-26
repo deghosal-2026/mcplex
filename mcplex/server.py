@@ -56,11 +56,15 @@ def _install_reload_handler(app: Starlette):
         new_client = httpx.AsyncClient(follow_redirects=True)
         register_all(new_registry, new_config, shared_client=new_client)
         new_registry.check_orphans()
-        new_limiter = RateLimiter(new_config.rate_limits if new_config.rate_limits else None)
+        new_limiter = RateLimiter(
+            new_config.rate_limits if new_config.rate_limits else None
+        )
         app.state.registry = new_registry
         app.state.rate_limiter = new_limiter
         app.state.http_client = new_client
-        logger.info("Config reloaded: %d tools registered", len(new_registry.list_tools()))
+        logger.info(
+            "Config reloaded: %d tools registered", len(new_registry.list_tools())
+        )
 
     try:
         signal.signal(signal.SIGHUP, _reload)
@@ -68,7 +72,9 @@ def _install_reload_handler(app: Starlette):
         logger.warning("SIGHUP not available on this platform — hot-reload disabled")
 
 
-def create_app(config: Config, http_client: httpx.AsyncClient | None = None) -> Starlette:
+def create_app(
+    config: Config, http_client: httpx.AsyncClient | None = None
+) -> Starlette:
     """Build a fully-wired Starlette app from a parsed Config."""
     registry = ToolRegistry(config)
     shared_client = http_client or httpx.AsyncClient(follow_redirects=True)

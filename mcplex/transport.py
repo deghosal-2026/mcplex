@@ -49,9 +49,13 @@ async def _handle_tools_list(registry: ToolRegistry, msg_id):
     return _json_rpc_response(msg_id, result={"tools": tools})
 
 
-async def _handle_tools_call(registry: ToolRegistry, body: dict, msg_id,
-                             rate_limiter: RateLimiter | None = None,
-                             client_info: dict | None = None):
+async def _handle_tools_call(
+    registry: ToolRegistry,
+    body: dict,
+    msg_id,
+    rate_limiter: RateLimiter | None = None,
+    client_info: dict | None = None,
+):
     """Execute a tool call and return its result."""
     start = time.monotonic()
     session_id = str(uuid.uuid4())
@@ -68,19 +72,32 @@ async def _handle_tools_call(registry: ToolRegistry, body: dict, msg_id,
     if schema:
         is_valid, err_msg = validate_args(arguments, schema)
         if not is_valid:
-            _audit_log("tool_call_validation_error",
-                       tool=name, session_id=session_id, user_id=user_id,
-                       latency_ms=0, error=err_msg)
-            return _json_rpc_response(msg_id, error={
-                "code": -32602, "message": f"Invalid params: {err_msg}",
-            })
+            _audit_log(
+                "tool_call_validation_error",
+                tool=name,
+                session_id=session_id,
+                user_id=user_id,
+                latency_ms=0,
+                error=err_msg,
+            )
+            return _json_rpc_response(
+                msg_id,
+                error={
+                    "code": -32602,
+                    "message": f"Invalid params: {err_msg}",
+                },
+            )
 
     if rate_limiter:
         allowed, limit_msg = rate_limiter.check(name, agent_id)
         if not allowed:
-            _audit_log("tool_call_rate_limited",
-                       tool=name, session_id=session_id, user_id=user_id,
-                       latency_ms=0)
+            _audit_log(
+                "tool_call_rate_limited",
+                tool=name,
+                session_id=session_id,
+                user_id=user_id,
+                latency_ms=0,
+            )
             result_str = json.dumps({"error": limit_msg})
             content_block: dict = {"type": "text", "text": result_str, "isError": True}
             return _json_rpc_response(msg_id, result={"content": [content_block]})
@@ -90,25 +107,36 @@ async def _handle_tools_call(registry: ToolRegistry, body: dict, msg_id,
     latency_ms = int((time.monotonic() - start) * 1000)
 
     meta = current_call.get(None)
-    _audit_log("tool_call",
-               tool=name, session_id=session_id, user_id=user_id,
-               client=client_info, is_error=is_error,
-               latency_ms=latency_ms,
-               response_size_bytes=len(result_str),
-               backend_url=meta.backend_url if meta else None,
-               http_status=meta.http_status if meta else None)
+    _audit_log(
+        "tool_call",
+        tool=name,
+        session_id=session_id,
+        user_id=user_id,
+        client=client_info,
+        is_error=is_error,
+        latency_ms=latency_ms,
+        response_size_bytes=len(result_str),
+        backend_url=meta.backend_url if meta else None,
+        http_status=meta.http_status if meta else None,
+    )
 
     content_block: dict = {"type": "text", "text": result_str}
     if is_error:
         content_block["isError"] = True
-    return _json_rpc_response(msg_id, result={
-        "content": [content_block],
-    })
+    return _json_rpc_response(
+        msg_id,
+        result={
+            "content": [content_block],
+        },
+    )
 
 
-async def _handle_request(body: dict, registry: ToolRegistry,
-                          rate_limiter: RateLimiter | None = None,
-                          client_info: dict | None = None):
+async def _handle_request(
+    body: dict,
+    registry: ToolRegistry,
+    rate_limiter: RateLimiter | None = None,
+    client_info: dict | None = None,
+):
     """Dispatch a single JSON-RPC request to the appropriate handler."""
     method = body.get("method")
     msg_id = body.get("id")
@@ -117,11 +145,14 @@ async def _handle_request(body: dict, registry: ToolRegistry,
         params = body.get("params", {})
         client_info = params.get("clientInfo") or client_info
         logger.info("Client initialize received")
-        return _json_rpc_response(msg_id, result={
-            "protocolVersion": MCP_PROTOCOL_VERSION,
-            "capabilities": {"tools": {"listChanged": False}},
-            "serverInfo": {"name": "mcplex", "version": __version__},
-        })
+        return _json_rpc_response(
+            msg_id,
+            result={
+                "protocolVersion": MCP_PROTOCOL_VERSION,
+                "capabilities": {"tools": {"listChanged": False}},
+                "serverInfo": {"name": "mcplex", "version": __version__},
+            },
+        )
 
     if method == "initialized":
         logger.info("Client initialized notification received")
@@ -130,36 +161,56 @@ async def _handle_request(body: dict, registry: ToolRegistry,
     if method == "tools/list":
         return await _handle_tools_list(registry, msg_id)
     if method == "tools/call":
-        return await _handle_tools_call(registry, body, msg_id,
-                                        rate_limiter, client_info)
+        return await _handle_tools_call(
+            registry, body, msg_id, rate_limiter, client_info
+        )
 
-    return _json_rpc_response(msg_id, error={
-        "code": -32601, "message": f"Method not found: {method}",
-    })
+    return _json_rpc_response(
+        msg_id,
+        error={
+            "code": -32601,
+            "message": f"Method not found: {method}",
+        },
+    )
 
 
-async def handle_mcp_message(request: Request, registry: ToolRegistry,
-                             rate_limiter: RateLimiter | None = None):
+async def handle_mcp_message(
+    request: Request, registry: ToolRegistry, rate_limiter: RateLimiter | None = None
+):
     """Main entry point for ``/mcp`` POST requests."""
     try:
         body = await request.json()
     except Exception:
         return JSONResponse(
-            {"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Parse error"}},
+            {
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {"code": -32700, "message": "Parse error"},
+            },
             status_code=400,
         )
 
     if not isinstance(body, dict):
         if isinstance(body, list):
-            raw_results = [await _handle_request(item, registry, rate_limiter, None) for item in body
-                           if isinstance(item, dict)]
+            raw_results = [
+                await _handle_request(item, registry, rate_limiter, None)
+                for item in body
+                if isinstance(item, dict)
+            ]
             results: list[dict] = [r for r in raw_results if r is not None]  # type: ignore[assignment]
             accept = request.headers.get("accept", "").lower()
             if "text/event-stream" in accept:
                 return _sse_response(results)
             return JSONResponse(results)
         return JSONResponse(
-            {"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": "Invalid Request — body must be a JSON object or array"}},
+            {
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {
+                    "code": -32600,
+                    "message": "Invalid Request — body must be a JSON object or array",
+                },
+            },
             status_code=400,
         )
 
@@ -167,9 +218,13 @@ async def handle_mcp_message(request: Request, registry: ToolRegistry,
         response_body = await _handle_request(body, registry, rate_limiter)
     except Exception:
         logger.exception("Unhandled error in _handle_request")
-        response_body = _json_rpc_response(body.get("id"), error={
-            "code": -32603, "message": "Internal error",
-        })
+        response_body = _json_rpc_response(
+            body.get("id"),
+            error={
+                "code": -32603,
+                "message": "Internal error",
+            },
+        )
 
     accept = request.headers.get("accept", "").lower()
     if "text/event-stream" in accept:

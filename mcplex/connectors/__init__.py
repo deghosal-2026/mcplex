@@ -52,8 +52,10 @@ def register_all(registry, config=None, shared_client=None):
                 if registry.has_handler(tool.name):
                     logger.warning(
                         "Tool %r defined by connector %r overrides existing handler",
-                        tool.name, connector.name,
+                        tool.name,
+                        connector.name,
                     )
-                handler = make_proxy_handler(connector.base_url, tool.http,
-                                              tool.parameters, shared_client)
+                handler = make_proxy_handler(
+                    connector.base_url, tool.http, tool.parameters, shared_client
+                )
                 registry.register_handler(tool.name, handler)

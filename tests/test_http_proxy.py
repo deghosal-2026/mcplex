@@ -27,18 +27,22 @@ def _error_backend(request: httpx.Request) -> httpx.Response:
 
 
 def _html_backend(request: httpx.Request) -> httpx.Response:
-    return httpx.Response(200, content="<html>dash</html>",
-                          headers={"content-type": "text/html"})
+    return httpx.Response(
+        200, content="<html>dash</html>", headers={"content-type": "text/html"}
+    )
 
 
 def _make_handler(backend_fn, config, parameters=None):
     """Create a proxy handler with a mock transport backend."""
     transport = httpx.MockTransport(backend_fn)
     client = httpx.AsyncClient(transport=transport, follow_redirects=True)
-    return make_proxy_handler("http://mock", config, parameters, shared_client=client), client
+    return make_proxy_handler(
+        "http://mock", config, parameters, shared_client=client
+    ), client
 
 
 # ── Arg validation tests (#49) ──────────────────────────────────
+
 
 def test_validate_args_type_mismatch():
     is_valid, msg = validate_args({"count": "abc"}, {"count": {"type": "integer"}})
@@ -59,7 +63,9 @@ def test_validate_args_unknown_param():
 
 
 def test_validate_args_enum():
-    is_valid, msg = validate_args({"sev": "sev9"}, {"sev": {"type": "string", "enum": ["sev1", "sev2", "sev3"]}})
+    is_valid, msg = validate_args(
+        {"sev": "sev9"}, {"sev": {"type": "string", "enum": ["sev1", "sev2", "sev3"]}}
+    )
     assert not is_valid
     assert "enum" in msg
 
@@ -81,9 +87,12 @@ def test_validate_args_valid():
 
 # ── Proxy handler tests with mock backend (#24) ──────────────────
 
+
 @pytest.mark.asyncio
 async def test_proxy_get_returns_json():
-    config = HttpToolConfig(method="GET", path="/api/test", param_mapping={"name": "name"})
+    config = HttpToolConfig(
+        method="GET", path="/api/test", param_mapping={"name": "name"}
+    )
     handler, client = _make_handler(_json_backend, config)
     result = await handler({"name": "hello"})
     parsed = json.loads(result)
@@ -93,7 +102,9 @@ async def test_proxy_get_returns_json():
 
 @pytest.mark.asyncio
 async def test_proxy_post_returns_json():
-    config = HttpToolConfig(method="POST", path="/api/submit", param_mapping={"data": "data"})
+    config = HttpToolConfig(
+        method="POST", path="/api/submit", param_mapping={"data": "data"}
+    )
     handler, client = _make_handler(_json_backend, config)
     result = await handler({"data": "payload"})
     parsed = json.loads(result)
@@ -124,9 +135,12 @@ async def test_proxy_html_wrapped():
 
 @pytest.mark.asyncio
 async def test_proxy_validation_error():
-    config = HttpToolConfig(method="GET", path="/api/test", param_mapping={"count": "count"})
-    handler, client = _make_handler(_json_backend, config,
-                                     parameters={"count": {"type": "integer"}})
+    config = HttpToolConfig(
+        method="GET", path="/api/test", param_mapping={"count": "count"}
+    )
+    handler, client = _make_handler(
+        _json_backend, config, parameters={"count": {"type": "integer"}}
+    )
     result = await handler({"count": "not-int"})
     parsed = json.loads(result)
     assert "error" in parsed

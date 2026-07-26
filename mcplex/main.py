@@ -27,7 +27,9 @@ def cli():
     sub = parser.add_subparsers(dest="command", required=True)
 
     serve_parser = sub.add_parser("serve", help="Start the MCPlex server")
-    serve_parser.add_argument("--config", default="config.yaml", help="Path to config file")
+    serve_parser.add_argument(
+        "--config", default="config.yaml", help="Path to config file"
+    )
     serve_parser.add_argument("--host", default="0.0.0.0", help="Bind address")
     serve_parser.add_argument("--port", type=int, default=8000, help="Port")
 

@@ -25,7 +25,9 @@ def test_per_tool_limit_enforced():
 
 def test_per_agent_limit():
     """Per-agent limits are tracked independently."""
-    rl = RateLimiter({"tool": {"max_requests": 2, "window_seconds": 60, "per_agent": True}})
+    rl = RateLimiter(
+        {"tool": {"max_requests": 2, "window_seconds": 60, "per_agent": True}}
+    )
     assert rl.check("tool", "agent_a")[0]
     assert rl.check("tool", "agent_a")[0]
     assert not rl.check("tool", "agent_a")[0]
@@ -35,10 +37,12 @@ def test_per_agent_limit():
 
 def test_different_tools_independent():
     """Rate limits for different tools don't interfere."""
-    rl = RateLimiter({
-        "tool_a": {"max_requests": 1, "window_seconds": 60},
-        "tool_b": {"max_requests": 1, "window_seconds": 60},
-    })
+    rl = RateLimiter(
+        {
+            "tool_a": {"max_requests": 1, "window_seconds": 60},
+            "tool_b": {"max_requests": 1, "window_seconds": 60},
+        }
+    )
     assert rl.check("tool_a")[0]
     assert not rl.check("tool_a")[0]
     assert rl.check("tool_b")[0]
@@ -46,7 +50,9 @@ def test_different_tools_independent():
 
 def test_no_agent_id_uses_tool_bucket():
     """Without agent_id, per-agent config falls back to per-tool bucket."""
-    rl = RateLimiter({"tool": {"max_requests": 2, "window_seconds": 60, "per_agent": True}})
+    rl = RateLimiter(
+        {"tool": {"max_requests": 2, "window_seconds": 60, "per_agent": True}}
+    )
     assert rl.check("tool")[0]
     assert rl.check("tool")[0]
     assert not rl.check("tool")[0]

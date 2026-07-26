@@ -84,7 +84,9 @@ async def test_query_history_filters_by_days_int():
     data = json.loads(result)
     cutoff = datetime.now(timezone.utc) - __import__("datetime").timedelta(days=7)
     for i in data["incidents"]:
-        incident_date = datetime.strptime(i["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        incident_date = datetime.strptime(i["date"], "%Y-%m-%d").replace(
+            tzinfo=timezone.utc
+        )
         assert incident_date >= cutoff
 
 
@@ -95,7 +97,9 @@ async def test_query_history_filters_by_days_str():
     data = json.loads(result)
     cutoff = datetime.now(timezone.utc) - __import__("datetime").timedelta(days=7)
     for i in data["incidents"]:
-        incident_date = datetime.strptime(i["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        incident_date = datetime.strptime(i["date"], "%Y-%m-%d").replace(
+            tzinfo=timezone.utc
+        )
         assert incident_date >= cutoff
 
 
