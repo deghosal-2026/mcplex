@@ -4,6 +4,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![PyPI](https://img.shields.io/pypi/v/mcplex)](https://pypi.org/project/mcplex/)
+[![Ruff](https://img.shields.io/badge/code%20style-ruff-000000)](https://github.com/astral-sh/ruff)
+[![Type checked](https://img.shields.io/badge/mypy-strict-blue)](https://github.com/python/mypy)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13801/badge)](https://www.bestpractices.dev/projects/13801)
 
 > Early proof-of-concept: a YAML-configured MCP proxy that maps simple JSON REST endpoints (GET + query params, POST + JSON body) into MCP tools. Not production-hardened — see [Roadmap](#roadmap).
