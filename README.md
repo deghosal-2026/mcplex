@@ -206,3 +206,9 @@ The demo `config.yaml` includes 4 connectors — 3 proxy to real sibling repos,
 ## License
 
 MIT
+
+## Resources
+
+- **Issues:** [github.com/deghosal-2026/mcplex/issues](https://github.com/deghosal-2026/mcplex/issues) — bug reports and feature requests
+- **Security:** [SECURITY.md](SECURITY.md) — report vulnerabilities privately
+- **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) — coding standards and PR process
